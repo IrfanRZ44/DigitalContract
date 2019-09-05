@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:tools="http://schemas.android.com/tools"
+      tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single"
+           android:id="@+id/grp1">
+        <item
+                android:id="@+id/nav_all"
+                android:icon="@drawable/ic_all_filter"
+                android:title="All" />
+        <item
+                android:id="@+id/nav_read"
+                android:icon="@drawable/ic_pending"
+                android:title="Read" />
+        <item
+                android:id="@+id/nav_unread"
+                android:icon="@drawable/ic_unread"
+                android:title="Unread" />
+        <item
+                android:id="@+id/nav_rejected"
+                android:icon="@drawable/ic_rejected"
+                android:title="Rejected" />
+        <item
+                android:id="@+id/nav_approved"
+                android:icon="@drawable/ic_check_green"
+                android:title="Approved" />
+    </group>
+
+    <group  android:checkableBehavior="single"
+            android:id="@+id/grp2">
+
+        <item
+                android:id="@+id/nav_register"
+                android:icon="@drawable/ic_register"
+                android:title="Register BSrE" />
+
+        <item
+                android:id="@+id/nav_about"
+                android:icon="@drawable/ic_info_black"
+                android:title="About" />
+
+        <item
+                android:id="@+id/nav_logout"
+                android:icon="@drawable/ic_logout"
+                android:title="Logout" />
+    </group>
+
+</menu>

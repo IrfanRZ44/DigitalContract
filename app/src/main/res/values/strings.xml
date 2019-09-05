@@ -1,0 +1,79 @@
+<resources>
+    <string name="app_name">Digital Contract</string>
+    <string name="loginBtn">Login</string>
+    <string name="username">Username</string>
+    <string name="pass">Password</string>
+    <string name="title_activity_dokumen_viewer">DokumenViewer</string>
+    <string name="title_home">Home</string>
+    <string name="title_dashboard">Dashboard</string>
+    <string name="title_notifications">Notifications</string>
+    <string name="channel_id">channel_digital_contract</string>
+
+
+    <string name="approve_confirm">Are you sure you have checked all details and continue to approve document?</string>
+
+    <string name="approve_yes">Yes</string>
+    <string name="sign_yes">Sign</string>
+    <string name="dialog_cancel">Cancel</string>
+
+    <string name="reject_confirm">Are you sure you have checked all details and continue to approve document?</string>
+    <string name="reject_yes">Reject</string>
+
+    <string name="reset_signature">Reset</string>
+    <string name="sign_confirm">Are you sure you want to certify the document?</string>
+
+
+    <string name="fa_person_outline">&#xf2c0;</string>
+    <string name="fa_lock">&#xf13e;</string>
+    <string name="fa_check">&#xf00c;</string>
+    <string name="fa_refresh">&#xf021;</string>
+    <string name="fa_mail_open">&#xf2b7;</string>
+    <string name="fa_mail_close">&#xf003;</string>
+    <string name="fa_calendar">&#xf073;</string>
+    <string name="fa_times">&#xf00d;</string>
+    <string name="fa_pending">&#xf110;</string>
+    <string name="fa_pending2">&#xf017;</string>
+    <string name="fa_bookmark">&#xf02e;</string>
+    <string name="fa_warning">&#xf071;</string>
+    <string name="fa_info_circle">&#xf05a;</string>
+
+    <string name="drawer_open">Open navigation drawer</string>
+    <string name="drawer_close">Close navigation drawer</string>
+
+    <string name="fingerprint_fail">Fingerprint not recognized. Try again.</string>
+    <string name="fingerprint_success">Fingerprint recognized.</string>
+    <string name="use_fingerprint_to_authenticate_key">use_fingerprint_to_authenticate_key</string>
+
+    <string name="fingerprint_sensor">Touch sensor</string>
+    <string name="fingerprint_register">Register at least one fingerprint.</string>
+    <string name="title_activity_dokumen_detail">DokumenDetail</string>
+    <string name="action_settings">Settings</string>
+    <string name="section_format">Hello World from section: %1$d</string>
+    <string name="tab_text_1">Document</string>
+    <string name="tab_text_2">Extra</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="title_activity_extra_viewer">ExtraViewer</string>
+    <string name="title_activity_password_changer">Change Password</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_email">Email</string>
+    <string name="prompt_password">Password (optional)</string>
+    <string name="action_change_password">Change</string>
+
+    <string name="title_activity_splash_screen">SplashScreen</string>
+    <string name="dummy_button">Dummy Button</string>
+    <string name="dummy_content">DUMMY\nCONTENT</string>
+    <string name="errorKoneksi">Koneksi Gagal</string>
+    <string name="errorKoneksiDetail">Gagal menghubungkan ke internet, periksa jaringan anda terlebih dahulu</string>
+    <string name="noData">Tidak Ada Data</string>
+    <string name="noDataDetail">Tidak ada data ditemukan, tarik ke bawah atau tekan tombol untuk refresh</string>
+    <string name="navigation_drawer_open">Open</string>
+    <string name="navigation_drawer_close">Close</string>
+    <string name="title_activity_act_new2">ActNew2</string>
+    <string name="notif_title">Digital Contract</string>
+    <string name="channel_name">Digital Contract</string>
+    <string name="next">Next</string>
+
+</resources>

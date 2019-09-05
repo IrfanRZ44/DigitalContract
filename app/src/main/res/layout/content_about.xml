@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        tools:showIn="@layout/act_about"
+        tools:ignore="MissingPrefix"
+        android:background="@color/white">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        <ImageView
+                android:id="@+id/iv"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:src="@drawable/bg_stock"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toTopOf="@+id/linearLayout2"/>
+
+        <View android:layout_width="match_parent"
+              android:layout_height="0dp"
+              app:layout_constraintEnd_toEndOf="parent"
+              app:layout_constraintStart_toStartOf="parent"
+              app:layout_constraintTop_toTopOf="parent"
+              app:layout_constraintBottom_toBottomOf="@+id/iv"
+              android:background="@drawable/grad_winter_neva"
+              android:id="@+id/view"/>
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/_50dp"
+                android:orientation="vertical"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                android:gravity="center"
+                android:id="@+id/linearLayout3"
+                android:layout_marginTop="8dp" app:layout_constraintTop_toBottomOf="@+id/view">
+
+            <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/_50dp"
+                    android:layout_weight="1"
+                    android:src="@drawable/pertamina"
+                    android:adjustViewBounds="true"/>
+
+            <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"
+                    android:textColor="@color/greyText"
+                    android:textSize="@dimen/_10sp"
+                    android:text="Supported By"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintBottom_toTopOf="@+id/linearLayout3"
+                    fontPath="fonts/Montserrat-Bold.ttf"
+                    android:layout_marginBottom="@dimen/_10dp"/>
+
+            <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/bsre"
+                    android:layout_weight="1"
+                    android:adjustViewBounds="true"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"/>
+        </LinearLayout>
+
+        <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/_20dp"
+                android:layout_marginRight="@dimen/_50dp"
+                android:gravity="left"
+                android:textColor="@android:color/white"
+                android:textSize="@dimen/_15sp"
+                android:text="Pertamina Digital Contract mempermudah proses penandatanganan dan persetujuan kontrak"
+                fontPath="fonts/Montserrat-SemiBold.ttf"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintBottom_toBottomOf="@+id/view"
+                app:layout_constraintTop_toTopOf="@+id/view"
+                android:visibility="visible" app:layout_constraintHorizontal_bias="0.0"
+                app:layout_constraintVertical_bias="1.0"/>
+
+        <TextView
+                android:id="@+id/tvResponse"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="@dimen/_10dp"
+                android:textColor="@android:color/black"
+                android:text="Versi Aplikasi 1.0"
+                android:textSize="@dimen/_10sp"
+                android:gravity="center"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent"
+                fontPath="fonts/Montserrat-SemiBold.ttf"
+                android:visibility="gone" android:layout_marginBottom="8dp"/>
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <include layout="@layout/content_loading"/>
+</FrameLayout>

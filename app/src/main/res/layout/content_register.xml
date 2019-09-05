@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        tools:showIn="@layout/act_register"
+        tools:ignore="MissingPrefix">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+        <ImageView android:layout_width="@dimen/_150dp"
+                   android:layout_height="wrap_content"
+                   android:adjustViewBounds="true"
+                   android:src="@drawable/bsre"
+                   app:layout_constraintEnd_toEndOf="parent"
+                   app:layout_constraintStart_toStartOf="parent"
+                   app:layout_constraintTop_toTopOf="parent"
+                   app:layout_constraintBottom_toTopOf="@+id/linearLayout2"/>
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="@dimen/_40dp"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                android:gravity="center"
+                android:id="@+id/linearLayout2">
+
+            <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"
+                    android:textColor="@android:color/white"
+                    android:textSize="@dimen/_12sp"
+                    android:text="CREATE BSRE ACCOUNT"
+                    fontPath="fonts/Montserrat-SemiBold.ttf"/>
+
+            <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_10dp"
+                    android:textAlignment="center"
+                    android:textColor="@android:color/white"
+                    android:textSize="@dimen/_10sp"
+                    android:text="account is required for signing document"
+                    fontPath="fonts/Montserrat-Regular.ttf"/>
+
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_20dp"
+                    android:orientation="horizontal">
+
+                <com.pertamina.digitalcontract.util.FontAwasomeTextView
+                        android:layout_width="@dimen/_20dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="@dimen/_10dp"
+                        android:textColor="@color/primaryBsre"
+                        android:textSize="@dimen/_20sp"
+                        android:text="@string/fa_person_outline"/>
+
+                <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:textColorHint="@color/primaryBsre"
+                        android:theme="@style/TextLabelBsre">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etUsername"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/transparent"
+                            android:ems="10"
+                            android:hint="NIK"
+                            android:inputType="number"
+                            android:paddingVertical="@dimen/_10dp"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/_10sp"
+                            fontPath="fonts/Montserrat-Medium.ttf"/>
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/primaryBsre"
+                    android:layout_marginBottom="15dp"/>
+
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                <com.pertamina.digitalcontract.util.FontAwasomeTextView
+                        android:layout_width="@dimen/_20dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="@dimen/_10dp"
+                        android:textColor="@color/primaryBsre"
+                        android:textSize="@dimen/_20sp"
+                        android:text="@string/fa_lock"/>
+
+                <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/login_password_text_input_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:passwordToggleEnabled="true"
+                        app:passwordToggleTint="@color/primaryBsre"
+                        android:textColorHint="@color/primaryBsre"
+                        android:theme="@style/TextLabelBsre">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etPassword"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@android:color/transparent"
+                            android:ems="10"
+                            android:hint="PASSPHRASE"
+                            android:inputType="textPassword"
+                            android:textColor="@color/white"
+                            android:textColorHint="@color/white"
+                            android:textSize="@dimen/_10sp"
+                            fontPath="fonts/Montserrat-Medium.ttf"/>
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+
+            <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="@color/primaryBsre"
+                    android:layout_marginBottom="15dp"/>
+
+            <TextView
+                    android:id="@+id/tvResponse"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"
+                    android:textColor="@android:color/white"
+                    android:textSize="@dimen/_9sp"
+                    fontPath="fonts/Montserrat-Regular.ttf"/>
+
+            <Button android:id="@+id/btRegister"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/_20dp"
+                    android:text="Register"
+                    android:textColor="@color/white"
+                    android:background="@drawable/bg_bt_bsre"
+                    android:textSize="@dimen/_10sp"
+                    fontPath="fonts/Montserrat-SemiBold.ttf"/>
+
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <include layout="@layout/content_loading"/>
+</FrameLayout>

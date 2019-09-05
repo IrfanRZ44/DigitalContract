@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:gravity="center"
+    tools:ignore="MissingPrefix">
+
+    <androidx.cardview.widget.CardView
+        android:layout_width="@dimen/_220dp"
+        android:layout_height="wrap_content"
+        app:cardBackgroundColor="@color/white"
+        app:cardCornerRadius="@dimen/_10dp">
+
+        <LinearLayout
+            android:layout_width="@dimen/_220dp"
+            android:layout_height="wrap_content"
+            android:orientation="vertical" >
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/grad_blue_red"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <com.pertamina.digitalcontract.util.FontAwasomeTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/fa_warning"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/_30sp" />
+
+                <TextView
+                    android:id="@+id/dialog_universal_warning_title"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Warning!"
+                    android:textColor="@color/white"
+                    android:textSize="@dimen/_18dp"
+                    fontPath="fonts/Montserrat-SemiBold.ttf" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingBottom="22dp"
+                android:paddingLeft="26dp"
+                android:paddingRight="26dp"
+                android:paddingTop="22dp" >
+
+                <TextView
+                    android:id="@+id/dialog_universal_warning_text"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:maxLines="4"
+                    android:text="@string/approve_confirm"
+                    android:textColor="@color/material_grey_600"
+                    android:textSize="@dimen/_11sp"
+                    fontPath="fonts/Montserrat-Regular.ttf" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="right" >
+
+                <TextView
+                    android:id="@+id/dialog_universal_warning_cancel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="8dp"
+                    android:background="@drawable/selector_dialog_warning"
+                    android:gravity="center"
+                    android:minWidth="64dp"
+                    android:padding="8dp"
+                    android:text="@string/dialog_cancel"
+                    android:textColor="@color/material_grey_600"
+                    android:textSize="@dimen/_11sp"
+                    fontPath="fonts/Montserrat-SemiBold.ttf" />
+
+                <TextView
+                    android:id="@+id/dialog_universal_warning_ok"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="8dp"
+                    android:background="@drawable/selector_dialog_warning"
+                    android:gravity="center"
+                    android:minWidth="64dp"
+                    android:padding="8dp"
+                    android:text="@string/approve_yes"
+                    android:textColor="@color/redSoft"
+                    android:textSize="@dimen/_11sp"
+                    fontPath="fonts/Montserrat-SemiBold.ttf" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
+
+</RelativeLayout>

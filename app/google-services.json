@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "954557470254",
+    "firebase_url": "https://digital-contract-c06a3.firebaseio.com",
+    "project_id": "digital-contract-c06a3",
+    "storage_bucket": "digital-contract-c06a3.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:954557470254:android:eb15389cba4ae31e",
+        "android_client_info": {
+          "package_name": "com.pertamina.digitalcontract"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "954557470254-g7l8ivtd4ofmg9kl1rct37mgdm5i5do3.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.pertamina.digitalcontract",
+            "certificate_hash": "34d25708a34ac9eef48cf4336e7ca816bcaccbdc"
+          }
+        },
+        {
+          "client_id": "954557470254-hfbvi4dgn41e2gu4edllbuj77o3o0sgc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNuHOO1I7_kegqAO1WsM2_SPRLkOjN4t4"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "954557470254-hfbvi4dgn41e2gu4edllbuj77o3o0sgc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

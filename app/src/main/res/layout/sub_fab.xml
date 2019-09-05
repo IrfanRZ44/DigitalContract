@@ -1,0 +1,239 @@
+<FrameLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/fabFrame"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
+        android:paddingVertical="@dimen/activity_vertical_margin"
+        android:paddingHorizontal="@dimen/activity_horizontal_margin"
+        android:orientation="vertical">
+
+    <LinearLayout
+            android:id="@+id/layoutSubFab"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginRight="@dimen/_6dp"
+            android:layout_marginBottom="@dimen/_70dp"
+            android:layout_marginEnd="@dimen/_6dp"
+            android:orientation="vertical">
+
+        <LinearLayout
+                android:id="@+id/layoutFabAttachment"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_gravity="bottom|end"
+                android:orientation="horizontal"
+                android:layout_marginBottom="@dimen/_6dp"
+                android:visibility="gone">
+
+            <androidx.cardview.widget.CardView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="@color/cardview_light_background"
+                    app:cardCornerRadius="@dimen/_4dp"
+                    app:cardElevation="@dimen/_4dp"
+                    app:cardUseCompatPadding="true" >
+
+                <TextView
+                        android:id="@+id/tvAttachment"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:text="Attachment"
+                        android:textStyle="bold"
+                        android:paddingHorizontal="@dimen/_6dp"
+                        android:paddingVertical="@dimen/_2dp" />
+
+            </androidx.cardview.widget.CardView>
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabAttachment"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@drawable/ic_attach_white"
+                    app:backgroundTint="@color/cpb_blue"
+                    app:fabSize="mini" />
+
+        </LinearLayout>
+
+        <LinearLayout
+                android:id="@+id/layoutFabDownload"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_gravity="bottom|end"
+                android:orientation="horizontal"
+                android:layout_marginBottom="@dimen/_6dp"
+                android:visibility="gone">
+
+            <androidx.cardview.widget.CardView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="@color/cardview_light_background"
+                    app:cardCornerRadius="@dimen/_4dp"
+                    app:cardElevation="@dimen/_4dp"
+                    app:cardUseCompatPadding="true" >
+
+                <TextView
+                        android:id="@+id/tvDownload"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:text="Donwload"
+                        android:textStyle="bold"
+                        android:paddingHorizontal="@dimen/_6dp"
+                        android:paddingVertical="@dimen/_2dp" />
+
+            </androidx.cardview.widget.CardView>
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabDownload"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@drawable/ic_download_white"
+                    app:backgroundTint="@color/material_grey_600"
+                    app:fabSize="mini" />
+
+        </LinearLayout>
+
+        <LinearLayout
+                android:id="@+id/layoutFabApprove"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_gravity="bottom|end"
+                android:orientation="horizontal"
+                android:layout_marginBottom="@dimen/_6dp">
+
+            <androidx.cardview.widget.CardView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="@color/cardview_light_background"
+                    app:cardCornerRadius="@dimen/_4dp"
+                    app:cardElevation="@dimen/_4dp"
+                    app:cardUseCompatPadding="true" >
+
+                <TextView
+                        android:id="@+id/tvApprove"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:text="Approve"
+                        android:textStyle="bold"
+                        android:paddingHorizontal="@dimen/_6dp"
+                        android:paddingVertical="@dimen/_2dp" />
+
+            </androidx.cardview.widget.CardView>
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabApprove"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@drawable/ic_check_white"
+                    app:backgroundTint="@android:color/holo_green_light"
+                    app:fabSize="mini" />
+
+        </LinearLayout>
+
+        <LinearLayout
+                android:id="@+id/layoutFabReject"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_gravity="bottom|end"
+                android:orientation="horizontal"
+                android:layout_marginBottom="@dimen/_5dp">
+
+            <androidx.cardview.widget.CardView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="@color/cardview_light_background"
+                    app:cardCornerRadius="@dimen/_4dp"
+                    app:cardElevation="@dimen/_4dp"
+                    app:cardUseCompatPadding="true" >
+
+                <TextView
+                        android:id="@+id/tvReject"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Reject"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:textStyle="bold"
+                        android:paddingHorizontal="@dimen/_6dp"
+                        android:paddingVertical="@dimen/_2dp" />
+
+            </androidx.cardview.widget.CardView>
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabReject"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@drawable/ic_close_white"
+                    app:backgroundTint="@color/cpb_red"
+                    app:fabSize="mini" />
+
+        </LinearLayout>
+
+        <LinearLayout
+                android:id="@+id/layoutFabSign"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_gravity="bottom|end"
+                android:orientation="horizontal">
+
+            <androidx.cardview.widget.CardView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="@color/cardview_light_background"
+                    app:cardCornerRadius="@dimen/_4dp"
+                    app:cardElevation="@dimen/_4dp"
+                    app:cardUseCompatPadding="true" >
+                <TextView
+                        android:id="@+id/tvSign"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Sign"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:textStyle="bold"
+                        android:paddingHorizontal="@dimen/_6dp"
+                        android:paddingVertical="@dimen/_2dp" />
+            </androidx.cardview.widget.CardView>
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabSign"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@drawable/ic_sign_white"
+                    app:backgroundTint="@android:color/holo_green_light"
+                    app:fabSize="mini" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+            android:id="@+id/layoutFabMore"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:layout_gravity="bottom|end"
+            android:layout_marginRight="@dimen/_5dp"
+            android:layout_marginBottom="@dimen/_20dp"
+            android:orientation="horizontal">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fabAction"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:padding="0dp"
+                app:srcCompat="@drawable/ic_more_vert_white"
+                app:backgroundTint="?attr/colorPrimary"
+                app:fabSize="normal"
+                android:visibility="gone"/>
+
+    </LinearLayout>
+</FrameLayout>

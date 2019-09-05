@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fitsSystemWindows="true"
+    tools:ignore="MissingPrefix" >
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingHorizontal="@dimen/_40dp"
+        android:background="@android:color/white">
+
+        <ImageView
+                android:id="@+id/logo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:srcCompat="@drawable/pertamina"
+                android:adjustViewBounds="true"
+                app:layout_constraintTop_toTopOf="parent" android:layout_marginBottom="8dp"
+                app:layout_constraintBottom_toTopOf="@+id/linearLayout"/>
+
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" android:id="@+id/linearLayout">
+
+
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="15dp">
+
+                <com.pertamina.digitalcontract.util.FontAwasomeTextView
+                        android:layout_width="@dimen/_20dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="@dimen/_10dp"
+                        android:textColor="@color/blue"
+                        android:textSize="@dimen/_20sp"
+                        android:text="@string/fa_person_outline"/>
+
+                <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:passwordToggleEnabled="true"
+                        app:passwordToggleTint="@color/blue"
+                        android:textColorHint="@color/greyText"
+                        android:theme="@style/TextLabel">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etUsername"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_bottom_gray"
+                            android:ems="10"
+                            android:hint="Username"
+                            android:inputType="textPersonName"
+                            android:paddingVertical="@dimen/_10dp"
+                            android:textColor="@color/greyText"
+                            android:textSize="@dimen/_10sp"
+                            fontPath="fonts/Montserrat-Medium.ttf"/>
+                </com.google.android.material.textfield.TextInputLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="15dp">
+
+                <com.pertamina.digitalcontract.util.FontAwasomeTextView
+                        android:layout_width="@dimen/_20dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="@dimen/_10dp"
+                        android:textColor="@color/blue"
+                        android:textSize="@dimen/_20sp"
+                        android:text="@string/fa_lock"/>
+
+                <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/login_password_text_input_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:passwordToggleEnabled="true"
+                        app:passwordToggleTint="@color/blue"
+                        android:textColorHint="@color/greyText"
+                        android:theme="@style/TextLabel">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etPassword"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:background="@drawable/bg_bottom_gray"
+                            android:ems="10"
+                            android:hint="Password"
+                            android:inputType="textPassword"
+                            android:textColor="@color/greyText"
+                            android:textSize="@dimen/_10sp"
+                            fontPath="fonts/Montserrat-Medium.ttf"/>
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
+
+            <TextView
+                    android:id="@+id/tvResponse"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAlignment="center"
+                    android:textColor="@android:color/black"
+                    android:textColorLink="@color/white"
+                    android:textSize="@dimen/_9sp"
+                    fontPath="fonts/Montserrat-Regular.ttf"/>
+
+            <Button
+                    android:id="@+id/loginBtn"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/_35dp"
+                    android:layout_marginTop="@dimen/_10dp"
+                    android:background="@drawable/bg_grad_winter"
+                    android:text="Masuk"
+                    android:textColor="@android:color/white"
+                    android:textSize="12sp"
+                    fontPath="fonts/Montserrat-Medium.ttf"/>
+
+        </LinearLayout>
+
+        <LinearLayout
+                android:id="@+id/llBottom"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                android:gravity="center"
+                android:orientation="vertical">
+
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Supported By"
+                    android:gravity="center"
+                    android:textColor="@color/greyText"
+                    android:textSize="@dimen/_10sp"
+                    fontPath="fonts/Montserrat-Bold.ttf" />
+
+            <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:srcCompat="@drawable/bsre"
+                    android:adjustViewBounds="true"/>
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    <RelativeLayout
+    android:id="@+id/cover"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:visibility="gone">
+
+    <ImageView
+        android:id="@+id/progress"
+        android:layout_width="@dimen/_80dp"
+        android:layout_height="@dimen/_80dp"
+        android:layout_centerInParent="true"
+        />
+
+    </RelativeLayout>
+
+</FrameLayout>
