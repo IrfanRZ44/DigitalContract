@@ -51,6 +51,8 @@ class SessionManager(internal var _context: Context) {
         editor.putString(K_IMEI, imei)
         editor.putString(K_ROLE, role)
 
+
+
         // commit changes
         editor.commit()
     }

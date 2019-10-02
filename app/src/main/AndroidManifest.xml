@@ -22,6 +22,9 @@
         android:usesCleartextTraffic="true"
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:allowBackup">
+        <meta-data
+                android:name="io.fabric.ApiKey"
+                android:value="dab265d447c59d4fa283413fcbd75dee808cbcdc" />
         <activity
             android:name=".activity.ActAttachment"
             android:screenOrientation="portrait"

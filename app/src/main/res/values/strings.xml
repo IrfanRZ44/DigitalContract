@@ -14,6 +14,7 @@
 
     <string name="approve_yes">Yes</string>
     <string name="sign_yes">Sign</string>
+    <string name="choose_viewer">Choose Reviewer</string>
     <string name="dialog_cancel">Cancel</string>
 
     <string name="reject_confirm">Are you sure you have checked all details and continue to approve document?</string>

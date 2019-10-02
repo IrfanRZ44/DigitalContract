@@ -15,7 +15,6 @@ import com.google.firebase.iid.FirebaseInstanceId
 import com.google.firebase.messaging.FirebaseMessaging
 import com.pertamina.digitalcontract.Contract
 import com.pertamina.digitalcontract.GlideApp
-import com.pertamina.digitalcontract.R
 import com.pertamina.digitalcontract.ResultContract
 import com.pertamina.digitalcontract.adapter.AdapterContract
 import com.pertamina.digitalcontract.util.SessionManager
@@ -33,6 +32,11 @@ import kotlin.collections.ArrayList
 import kotlin.collections.MutableList
 import kotlin.collections.set
 
+import com.crashlytics.android.Crashlytics
+import com.pertamina.digitalcontract.R
+import io.fabric.sdk.android.Fabric
+
+
 class MainActivity : ActBaseFullScreen(), NavigationView.OnNavigationItemSelectedListener,
         (Contract, Int, Int) -> Unit {
 
@@ -46,6 +50,7 @@ class MainActivity : ActBaseFullScreen(), NavigationView.OnNavigationItemSelecte
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Fabric.with(this, Crashlytics())
         FirebaseApp.initializeApp(this@MainActivity)
         FirebaseMessaging.getInstance().subscribeToTopic("all")
         FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
@@ -57,6 +62,8 @@ class MainActivity : ActBaseFullScreen(), NavigationView.OnNavigationItemSelecte
         session = SessionManager(this)
         val myName = session.name
         val userRoleIndex = session.role?.toInt()?:-1
+
+        Log.e("Nama", session.name + session.role)
 
         val toggle = ActionBarDrawerToggle(
             this, drawer_layout, toolbar,
@@ -184,6 +191,9 @@ class MainActivity : ActBaseFullScreen(), NavigationView.OnNavigationItemSelecte
                 { error -> errorKoneksi(error) }
             )*/
 
+        Log.e("Body 1", body.toString());
+        Log.e("Body 2", body2.toString());
+
         disposable = service.checkImei(body)
             .flatMap {
                     result -> onSuccessCheckImei(result)
@@ -201,6 +211,7 @@ class MainActivity : ActBaseFullScreen(), NavigationView.OnNavigationItemSelecte
     private fun onSuccessCheckImei(result : ResponseBody){
         val obj = JSONObject(result.string())
         imeiResponse = obj.getInt("response")
+        Log.e("Result 1", imeiResponse.toString())
     }
 
     private fun onSuccessGetContract(result : ResultContract){
@@ -208,6 +219,7 @@ class MainActivity : ActBaseFullScreen(), NavigationView.OnNavigationItemSelecte
             if (imeiResponse != 1) {
                 Logout()
             } else {
+
                 list?.clear()
                 list?.addAll(result.response)
 

@@ -1,5 +1,6 @@
 package com.pertamina.digitalcontract.rest
 
+import android.util.Log
 import com.pertamina.digitalcontract.Login
 import com.pertamina.digitalcontract.ResultContract
 import com.pertamina.digitalcontract.Config
@@ -107,17 +108,36 @@ interface ApiInterface {
                     .baseUrl(Config.BASE_URL_API)
                     .client(client)
                     .build()
-
+            Log.e("Retro", retrofit.baseUrl().toString());
             return retrofit.create(ApiInterface::class.java)
         }
 
-        fun createBSRE(timeOut : Long = 60): ApiInterface {
-            val okHttpClient = UnsafeOkHttpClient.getUnsafeOkHttpClient()
+        fun createBSRE(timeOut : Long = 180): ApiInterface {
+//            val okHttpClient = UnsafeOkHttpClient.getUnsafeOkHttpClient()
+
+            var okHttpClient : OkHttpClient.Builder = OkHttpClient.Builder()
+
+            val client = okHttpClient.build()
+
+            okHttpClient.readTimeout(timeOut,TimeUnit.SECONDS)
+            okHttpClient.connectTimeout(timeOut, TimeUnit.SECONDS)
+            okHttpClient.addInterceptor {
+                    chain ->
+                val original : Request = chain.request()
+                val request : Request = original.newBuilder()
+//                        .header("Content-Type", "application/x-www-form-urlencoded")
+                    .header("Content-Type", "application/json")
+                    .header("Accept", "application/json")
+                    .method(original.method(),original.body())
+                    .build()
+                chain.proceed(request)
+            }
+
             val retrofit = Retrofit.Builder()
                     .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                     .addConverterFactory(GsonConverterFactory.create())
                     .baseUrl(Config.BASE_URL_BSRE)
-                    .client(okHttpClient)
+                    .client(client)
                     .build()
 
             return retrofit.create(ApiInterface::class.java)

@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.drawable.AnimationDrawable
+import android.os.Build
 import android.os.Bundle
 import android.telephony.TelephonyManager
 import android.util.Log
@@ -12,17 +13,28 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.firebase.FirebaseApp
 import com.google.firebase.iid.FirebaseInstanceId
+import com.google.gson.GsonBuilder
 import com.pertamina.digitalcontract.BuildConfig
 import com.pertamina.digitalcontract.Login
 import com.pertamina.digitalcontract.R
+import com.pertamina.digitalcontract.TesRetrofit.RetrofitApi
+import com.pertamina.digitalcontract.model.ModelLogin
 import com.pertamina.digitalcontract.rest.ApiInterface
 import com.pertamina.digitalcontract.util.SessionManager
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.act_login.*
+import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
+import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper
+import java.util.concurrent.TimeUnit
 
 class ActLogin : AppCompatActivity(), View.OnClickListener {
 
@@ -125,6 +137,8 @@ class ActLogin : AppCompatActivity(), View.OnClickListener {
         body.put("password", password)
         body.put("imei", imei)
         body.put("username", username)
+        Log.e("Body", body.toString())
+
         disposable = service.login(body)
                 .subscribeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
@@ -143,7 +157,7 @@ class ActLogin : AppCompatActivity(), View.OnClickListener {
             FirebaseInstanceId.getInstance().instanceId.addOnSuccessListener {
                 token = it.token
                 setOtherData(result,  it.token)
-//                Log.d("balao login",token)
+                Log.e("Result", token)
             }
 
 
@@ -180,6 +194,14 @@ class ActLogin : AppCompatActivity(), View.OnClickListener {
             mImei,
             login.role?:"0"
         )
+//        session.createLoginSession(
+//            etUsername.text.toString(),
+//            etPassword.text.toString(),
+//            login.id?:"",
+//            login.name?:"",
+//            mImei,
+//            "8"
+//        )
 
         val i = Intent(this, MainActivity::class.java)
         i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK )
@@ -204,8 +226,10 @@ class ActLogin : AppCompatActivity(), View.OnClickListener {
 
     private fun imeiMatched() {
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(android.Manifest.permission.READ_PHONE_STATE),
-                    PERMISSIONS_REQUEST_READ_PHONE_STATE)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                requestPermissions(arrayOf(android.Manifest.permission.READ_PHONE_STATE),
+                        PERMISSIONS_REQUEST_READ_PHONE_STATE)
+            }
         } else {
             val tlpMgr = getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
             mImei = tlpMgr.deviceId

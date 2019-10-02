@@ -14,5 +14,11 @@ open class Login {
     @field:SerializedName("imei")
     open var imei : String? = ""
 
-
+    constructor(response: Int?, id: String?, name: String?, role: String?, imei: String?) {
+        this.response = response
+        this.id = id
+        this.name = name
+        this.role = role
+        this.imei = imei
+    }
 }

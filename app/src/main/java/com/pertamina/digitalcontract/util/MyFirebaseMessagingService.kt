@@ -122,6 +122,7 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
     private fun createNotification(title: String?,body: String?,data : MutableMap<String,String>) {
         val intent = Intent(this, MainActivity::class.java)
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP )
+
         intent.action = System.currentTimeMillis().toString()
 
         var resultIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT)

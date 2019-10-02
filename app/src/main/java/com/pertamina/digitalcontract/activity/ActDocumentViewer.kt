@@ -9,11 +9,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.AnimationDrawable
 import android.hardware.fingerprint.FingerprintManager
-import android.os.AsyncTask
-import android.os.Build
-import android.os.Bundle
-import android.os.Environment
-import android.preference.PreferenceManager
+import android.os.*
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
@@ -36,10 +32,11 @@ import androidx.core.content.FileProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.github.gcacace.signaturepad.views.SignaturePad
-import com.google.android.material.floatingactionbutton.FloatingActionButton
-import com.jakewharton.rxbinding2.widget.RxTextView
+import com.google.gson.GsonBuilder
 import com.pertamina.digitalcontract.*
+import com.pertamina.digitalcontract.TesRetrofit.RetrofitApi
 import com.pertamina.digitalcontract.adapter.AdapterExtra
+import com.pertamina.digitalcontract.adapter.AdapterReviewer
 import com.pertamina.digitalcontract.fingerprint.FingerprintAuthenticationDialogFragment
 import com.pertamina.digitalcontract.rest.ApiInterface
 import com.pertamina.digitalcontract.util.*
@@ -48,9 +45,16 @@ import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.content_act_new2.*
 import kotlinx.android.synthetic.main.content_loading.*
 import kotlinx.android.synthetic.main.sub_fab.*
+import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
+import okhttp3.logging.HttpLoggingInterceptor
 import org.jetbrains.anko.textColor
 import org.json.JSONObject
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
 import java.io.IOException
 import java.security.*
@@ -61,7 +65,7 @@ import javax.crypto.*
 
 
 class ActDocumentViewer : ActBase(),
-    FingerprintAuthenticationDialogFragment.Callback, (Extra, Int) -> Unit {
+        FingerprintAuthenticationDialogFragment.Callback, (Extra, Int) -> Unit {
 
     private lateinit var keyStore: KeyStore
     private lateinit var keyGenerator: KeyGenerator
@@ -78,16 +82,16 @@ class ActDocumentViewer : ActBase(),
     private var mContractId: Int = 0
     private var mContractStatus: Int = 0
     private var mUserId: String? = null//, mWebViewContent;
-    private var imeiResponse : Int? = 0
+    private var imeiResponse: Int? = 0
     private var canApprove = false
     private var webviewLoad = false
     private var isDownloaded = false
     private var passPhrase = ""
 
-    var listPdf : MutableList<Extra>? = ArrayList()
+    var listPdf: MutableList<Extra>? = ArrayList()
 
     private var fabExpanded = false
-    open val serviceBSRE by lazy{
+    open val serviceBSRE by lazy {
         ApiInterface.createBSRE()
     }
 
@@ -95,15 +99,15 @@ class ActDocumentViewer : ActBase(),
         super.onCreate(savedInstanceState)
         setContentView(com.pertamina.digitalcontract.R.layout.act_document_viewer)
 
-        session             = SessionManager(this)
-        mDocTitle           = intent.getStringExtra("DOC_TITLE")
-        mContractId         = intent.getStringExtra("DOC_ID").toInt()
-        mContractStatus     = intent.getIntExtra("DOC_STATUS", -1)
-        isDownloaded        = intent.getBooleanExtra("DOC_DOWNLOAD", false)
-        mUserRole           = session.role?.toInt()?:-1
-        mUserId             = session.id
-        canApprove          = (mUserRole < 5) or (mUserRole == 7) //3 - finance 4 - legal 5 - officer 6 - vendor 7 - reviewer
-        title               = mDocTitle
+        session = SessionManager(this)
+        mDocTitle = intent.getStringExtra("DOC_TITLE")
+        mContractId = intent.getStringExtra("DOC_ID").toInt()
+        mContractStatus = intent.getIntExtra("DOC_STATUS", -1)
+        isDownloaded = intent.getBooleanExtra("DOC_DOWNLOAD", false)
+        mUserRole = session.role?.toInt() ?: -1
+        mUserId = session.id
+        canApprove = (mUserRole < 5) or (mUserRole == 7) //3 - finance 4 - legal 5 - officer 6 - vendor 7 - reviewer
+        title = mDocTitle
 
         dialog = Dialog(this, R.style.CustomDialogTheme)
         mDialogL = Dialog(this, R.style.CustomDialogTheme)
@@ -116,7 +120,7 @@ class ActDocumentViewer : ActBase(),
 
         //init web viewer
         webView.settings.javaScriptEnabled = true
-        webView.webViewClient = object : WebViewClient(){
+        webView.webViewClient = object : WebViewClient() {
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 super.onPageStarted(view, url, favicon)
                 webviewLoad = true
@@ -127,12 +131,11 @@ class ActDocumentViewer : ActBase(),
                 super.onPageFinished(view, url)
                 onComplete()
 
-                if(!webviewLoad) {
+                if (!webviewLoad) {
                     webviewLoad = false
                     webView.reload()
                     swipeRefresh.isEnabled = true
-                }
-                else {
+                } else {
                     swipeRefresh.isEnabled = false
                     fabAction.visibility = View.VISIBLE
                 }
@@ -151,7 +154,7 @@ class ActDocumentViewer : ActBase(),
         }
 
         fabAction.setOnClickListener { view ->
-            if (fabExpanded == true){
+            if (fabExpanded == true) {
                 closeSubMenusFab()
             } else {
                 openSubMenusFab()
@@ -198,51 +201,51 @@ class ActDocumentViewer : ActBase(),
 
     //cek imei dan get pdf
     private fun checkActiveAccount() {
-        val body = HashMap<String,String>()
-        body["imei"] = session.imei ?:""
-        body["id_user"] = session.id ?:""
+        val body = HashMap<String, String>()
+        body["imei"] = session.imei ?: ""
+        body["id_user"] = session.id ?: ""
 
         val body2 = HashMap<String, String>()
         body2["id_contract"] = mContractId.toString()
-        body2["id_user"] = session.id ?:""
+        body2["id_user"] = session.id ?: ""
 
         disposable = service.checkImei(body)
-            .flatMap {
-                    result -> onSuccessCheckImei(result)
-                return@flatMap service.getDocument(body2)
-            }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnSubscribe { onLoading() }
-            .subscribe(
-                { result -> onSuccessGetDocument(result) },
-                { error -> errorKoneksi(error) }
-            )
+                .flatMap { result ->
+                    onSuccessCheckImei(result)
+                    return@flatMap service.getDocument(body2)
+                }
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe { onLoading() }
+                .subscribe(
+                        { result -> onSuccessGetDocument(result) },
+                        { error -> errorKoneksi(error) }
+                )
     }
 
     //get pdf saja
     private fun reload() {
         val body = HashMap<String, String>()
         body["id_contract"] = mContractId.toString()
-        body["id_user"] = session.id ?:""
+        body["id_user"] = session.id ?: ""
 
         disposable = service.getDocument(body)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnSubscribe { onLoading() }
-            .subscribe(
-                { result -> onSuccessGetDocument(result) },
-                { error -> errorKoneksi(error) }
-            )
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe { onLoading() }
+                .subscribe(
+                        { result -> onSuccessGetDocument(result) },
+                        { error -> errorKoneksi(error) }
+                )
     }
 
 
-    private fun onSuccessCheckImei(result : ResponseBody){
+    private fun onSuccessCheckImei(result: ResponseBody) {
         val obj = JSONObject(result.string())
         imeiResponse = obj.getInt("response")
     }
 
-    private fun onSuccessGetDocument(result : ResponseBody){
+    private fun onSuccessGetDocument(result: ResponseBody) {
         if (imeiResponse != 1) {
             Logout()
         } else {
@@ -254,17 +257,14 @@ class ActDocumentViewer : ActBase(),
             val jumlahExtra = objAdditional.length()
             if (jumlahExtra > 0) {
 
-                for(i in 0..(objAdditional.length() - 1)){
+                for (i in 0..(objAdditional.length() - 1)) {
                     val item = objAdditional.getJSONObject(i)
-                    listPdf?.add(Extra(  item.getString("NAME"),
-                                        item.getString("SIZE"),
-                                        item.getString("TOKEN"),
-                                        item.getString("PATH")
-                                    ))
+                    listPdf?.add(Extra(item.getString("NAME"),
+                            item.getString("SIZE"),
+                            item.getString("TOKEN"),
+                            item.getString("PATH")
+                    ))
                 }
-
-                Log.d("bayao 2",listPdf?.size.toString())
-
 
                 layoutFabAttachment.visibility = View.VISIBLE
 
@@ -280,7 +280,11 @@ class ActDocumentViewer : ActBase(),
                 if (canApprove) {                                                       //seleksi aksi yang sesuai untuk contract
                     InitApprover()                                                      //selain vendor dan officer bisa approve tombol
                 } else {
-                    InitSigner()                                                        //vendor dan officer hanya bisa sign
+                    if (mUserRole == 8) {
+                        InitChooseViewer()
+                    } else {
+                        InitSigner()                                                        //vendor dan officer hanya bisa sign
+                    }
                 }
             }
             //sudah pernah ada aksi sebelumnya jadi tidak ada aksi
@@ -302,21 +306,42 @@ class ActDocumentViewer : ActBase(),
                         tvApprove.setTextColor(resources.getColor(R.color.cpb_green_dark))
                     }
                 } else {
-                    layoutFabApprove.visibility = View.GONE
-                    layoutFabReject.visibility = View.GONE
-                    layoutFabSign.visibility = View.VISIBLE
-                    tvSign.text = "Signed"
-                    tvSign.setTextColor(resources.getColor(R.color.cpb_green_dark))
+                    if (mUserRole == 8) {
+                        layoutFabApprove.visibility = View.GONE
+                        layoutFabReject.visibility = View.GONE
+                        layoutFabSign.visibility = View.VISIBLE
+                        tvSign.text = "Choose"
+                        tvSign.setTextColor(resources.getColor(R.color.cpb_green_dark))
 
-                    if(isDownloaded) {
-                        layoutFabDownload.visibility = View.VISIBLE
-                        fabDownload.setOnClickListener {
-                            //            checkPDF()
-                            checkPermission()
-                            if (fabExpanded == true) {
-                                closeSubMenusFab()
-                            } else {
-                                openSubMenusFab()
+                        if (isDownloaded) {
+                            layoutFabDownload.visibility = View.VISIBLE
+                            fabDownload.setOnClickListener {
+                                //            checkPDF()
+                                checkPermission()
+                                if (fabExpanded == true) {
+                                    closeSubMenusFab()
+                                } else {
+                                    openSubMenusFab()
+                                }
+                            }
+                        }
+                    } else {
+                        layoutFabApprove.visibility = View.GONE
+                        layoutFabReject.visibility = View.GONE
+                        layoutFabSign.visibility = View.VISIBLE
+                        tvSign.text = "Signed"
+                        tvSign.setTextColor(resources.getColor(R.color.cpb_green_dark))
+
+                        if (isDownloaded) {
+                            layoutFabDownload.visibility = View.VISIBLE
+                            fabDownload.setOnClickListener {
+                                //            checkPDF()
+                                checkPermission()
+                                if (fabExpanded == true) {
+                                    closeSubMenusFab()
+                                } else {
+                                    openSubMenusFab()
+                                }
                             }
                         }
                     }
@@ -333,6 +358,7 @@ class ActDocumentViewer : ActBase(),
     private fun updateDocumentView() {
         var content = Config.BASE_URL + "export/" + mContractId.toString() + "_" + mDocTitle + ".pdf"
         content = "https://drive.google.com/viewerng/viewer?embedded=true&url=$content"
+        Log.e("Url doc", content);
         webView.loadUrl(content)
     }
 
@@ -365,13 +391,13 @@ class ActDocumentViewer : ActBase(),
             }
 
             override fun afterTextChanged(s: Editable) {
-                okBtnR?.isEnabled = mRejectionNote?.text?.length?:0 > 0
+                okBtnR?.isEnabled = mRejectionNote?.text?.length ?: 0 > 0
             }
         })
 
 
         //2 = reject
-        okBtnR?.isEnabled = mRejectionNote?.text?.length?:0 > 0
+        okBtnR?.isEnabled = mRejectionNote?.text?.length ?: 0 > 0
         okBtnR?.setOnClickListener {
             mDialogR?.dismiss()
             changeStatusContract(2, mRejectionNote?.text.toString(), true)
@@ -381,14 +407,15 @@ class ActDocumentViewer : ActBase(),
 
         fabApprove.setOnClickListener {
             mDialogL?.show()
-            if (fabExpanded == true){
+            if (fabExpanded == true) {
                 closeSubMenusFab()
             } else {
                 openSubMenusFab()
-            }}
+            }
+        }
         fabReject.setOnClickListener {
             mDialogR?.show()
-            if (fabExpanded == true){
+            if (fabExpanded == true) {
                 closeSubMenusFab()
             } else {
                 openSubMenusFab()
@@ -396,18 +423,19 @@ class ActDocumentViewer : ActBase(),
         }
     }
 
+
     //fungsi hanya untuk yang bisa tanda tangan (officer & vendor)
     private fun InitSigner() {
         layoutFabApprove.visibility = View.GONE
         layoutFabReject.visibility = View.GONE
         layoutFabSign.visibility = View.VISIBLE
 
-
         mPadSigned = false
         mDialogL?.setContentView(R.layout.dialog_password)
-        val etPass      = mDialogL?.findViewById<EditText>(R.id.etPassword)
-        val okBtn       = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_ok)
-        val cancelBtn   = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_cancel)
+
+        val cancelBtn = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_cancel)
+        val okBtn = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_ok)
+        val etPass = mDialogL?.findViewById<EditText>(R.id.etPassword)
 
         okBtn?.setOnClickListener {
             passPhrase = etPass?.text.toString()
@@ -415,18 +443,60 @@ class ActDocumentViewer : ActBase(),
             mDialogL?.dismiss()
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                    setupKeyStoreAndKeyGenerator()
-                    val (defaultCipher: javax.crypto.Cipher, cipherNotInvalidated: javax.crypto.Cipher) = setupCiphers()
-                    setUpFingerPrint(cipherNotInvalidated, defaultCipher)
-            }
-            else{
+                setupKeyStoreAndKeyGenerator()
+                val (defaultCipher: javax.crypto.Cipher, cipherNotInvalidated: javax.crypto.Cipher) = setupCiphers()
+                setUpFingerPrint(cipherNotInvalidated, defaultCipher)
+            } else {
                 sendSign()
             }
         }
 
+        cancelBtn?.setOnClickListener {
+            mSignPad?.clear()
+            mDialogL?.dismiss()
+        }
+
         fabSign.setOnClickListener {
             mDialogL?.show()
-            if (fabExpanded == true){
+
+            if (fabExpanded == true) {
+                closeSubMenusFab()
+            } else {
+                openSubMenusFab()
+            }
+        }
+    }
+
+    private fun InitChooseViewer() {
+        layoutFabApprove.visibility = View.GONE
+        layoutFabReject.visibility = View.GONE
+        layoutFabSign.visibility = View.VISIBLE
+
+        tvSign.text = resources.getString(R.string.choose_viewer)
+        GlideApp.with(this).load(R.drawable.ic_check2_white).into(fabSign)
+
+        mDialogL?.setContentView(R.layout.dialog_choose_reviewer)
+        val cancelBtn = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_cancel)
+        val rcReviewer = mDialogL?.findViewById<RecyclerView>(R.id.rcReviewer)
+
+        val list = ArrayList<String>()
+
+        rcReviewer?.setHasFixedSize(true)
+        rcReviewer?.layoutManager = LinearLayoutManager(this)
+
+        list.add("GOOGLE")
+        list.add("Microsoft")
+        list.add("Aple")
+        list.add("Laptop")
+
+        val adapter = AdapterReviewer(list, this)
+
+        rcReviewer?.adapter = adapter
+
+        fabSign.setOnClickListener {
+            Log.e("Show", "Dialog")
+            mDialogL?.show()
+            if (fabExpanded == true) {
                 closeSubMenusFab()
             } else {
                 openSubMenusFab()
@@ -457,41 +527,41 @@ class ActDocumentViewer : ActBase(),
         body["note"] = note
 
         disposable = service.setReadStatus(body)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnSubscribe {
-                if(useLoading) onLoading()
-            }
-            .subscribe(
-                { result ->
-                    if(useLoading) onComplete()
-
-                    val obj = JSONObject(result.string())
-                    val response = obj.getInt("response")
-                    if(response == 1) {
-                        mContractStatus = currentStatus
-                        when(currentStatus){
-                            2 -> dialogSuccess("Document has been rejected", currentStatus)
-                            3 -> dialogSuccess("Document has been approved", currentStatus)
-                        }
-                    }
-
-                  /*  if (refreshAfterFinish) {
-
-                    }*/
-                },
-                { error ->
-                    onComplete()
-                    when(currentStatus){
-                        2 -> dialogFailed("Error occured, the document has been failed to reject")
-                        3 -> dialogFailed("Error occured, the document has been failed to approve")
-                    }
-                    Log.d(TAG,"Change Status Error"+error.message)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .doOnSubscribe {
+                    if (useLoading) onLoading()
                 }
-            )
+                .subscribe(
+                        { result ->
+                            if (useLoading) onComplete()
+
+                            val obj = JSONObject(result.string())
+                            val response = obj.getInt("response")
+                            if (response == 1) {
+                                mContractStatus = currentStatus
+                                when (currentStatus) {
+                                    2 -> dialogSuccess("Document has been rejected", currentStatus)
+                                    3 -> dialogSuccess("Document has been approved", currentStatus)
+                                }
+                            }
+
+                            /*  if (refreshAfterFinish) {
+
+                              }*/
+                        },
+                        { error ->
+                            onComplete()
+                            when (currentStatus) {
+                                2 -> dialogFailed("Error occured, the document has been failed to reject")
+                                3 -> dialogFailed("Error occured, the document has been failed to approve")
+                            }
+                            Log.d(TAG, "Change Status Error" + error.message)
+                        }
+                )
     }
 
-    fun dialogSuccess(teks : String, currentStatus : Int){
+    fun dialogSuccess(teks: String, currentStatus: Int) {
         dialog?.setContentView(R.layout.dialog_status)
 
         val faIcon = dialog?.findViewById<FontAwasomeTextView>(R.id.faIcon)
@@ -500,19 +570,17 @@ class ActDocumentViewer : ActBase(),
         val btOk = dialog?.findViewById<Button>(R.id.btOk)
         faIcon?.text = resources.getText(R.string.fa_check)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            faIcon?.background = resources.getDrawable(R.drawable.bg_circle_green,null)
-            btOk?.background = resources.getDrawable(R.drawable.bg_outer_green,null)
-        }
-        else {
+            faIcon?.background = resources.getDrawable(R.drawable.bg_circle_green, null)
+            btOk?.background = resources.getDrawable(R.drawable.bg_outer_green, null)
+        } else {
             faIcon?.background = resources.getDrawable(R.drawable.bg_circle_green)
             btOk?.background = resources.getDrawable(R.drawable.bg_outer_green)
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            btOk?.textColor = resources.getColor(R.color.cpb_green,null)
-            tvTitle?.textColor = resources.getColor(R.color.cpb_green,null)
-        }
-        else{
+            btOk?.textColor = resources.getColor(R.color.cpb_green, null)
+            tvTitle?.textColor = resources.getColor(R.color.cpb_green, null)
+        } else {
             btOk?.textColor = resources.getColor(R.color.cpb_green)
             tvTitle?.textColor = resources.getColor(R.color.cpb_green)
         }
@@ -531,7 +599,7 @@ class ActDocumentViewer : ActBase(),
         dialog?.show()
     }
 
-    fun dialogExtra(){
+    fun dialogExtra() {
         dialog?.setContentView(R.layout.dialog_extra)
 
         var adapter: AdapterExtra?
@@ -541,10 +609,10 @@ class ActDocumentViewer : ActBase(),
         val layoutManager = LinearLayoutManager(this)
         recycler?.layoutManager = layoutManager
         recycler?.isNestedScrollingEnabled = false
-        adapter = listPdf?.let { it1 -> AdapterExtra(this, it1,this) }
+        adapter = listPdf?.let { it1 -> AdapterExtra(this, it1, this) }
         recycler?.adapter = adapter
 
-        Log.d("bayao",listPdf?.size.toString())
+        Log.d("bayao", listPdf?.size.toString())
 
         dialog?.show()
     }
@@ -556,12 +624,12 @@ class ActDocumentViewer : ActBase(),
         } else {
             openSubMenusFab()
         }
-        val i = Intent(this,ActAttachment::class.java)
-        i.putExtra("DOC_TITLE",data.name)
+        val i = Intent(this, ActAttachment::class.java)
+        i.putExtra("DOC_TITLE", data.name)
         startActivity(i)
     }
 
-    fun dialogFailed(teks:String){
+    fun dialogFailed(teks: String) {
         dialog?.setContentView(R.layout.dialog_status)
 
         val faIcon = dialog?.findViewById<FontAwasomeTextView>(R.id.faIcon)
@@ -570,19 +638,17 @@ class ActDocumentViewer : ActBase(),
         val btOk = dialog?.findViewById<Button>(R.id.btOk)
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            tvTitle?.textColor = resources.getColor(R.color.cpb_red,null)
-            btOk?.textColor = resources.getColor(R.color.cpb_red,null)
-        }
-        else{
+            tvTitle?.textColor = resources.getColor(R.color.cpb_red, null)
+            btOk?.textColor = resources.getColor(R.color.cpb_red, null)
+        } else {
             tvTitle?.textColor = resources.getColor(R.color.cpb_red)
             btOk?.textColor = resources.getColor(R.color.cpb_red)
         }
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            faIcon?.background = resources.getDrawable(R.drawable.bg_circle_red,null)
-            btOk?.background = resources.getDrawable(R.drawable.bg_outer_red,null)
-        }
-        else{
+            faIcon?.background = resources.getDrawable(R.drawable.bg_circle_red, null)
+            btOk?.background = resources.getDrawable(R.drawable.bg_outer_red, null)
+        } else {
             faIcon?.background = resources.getDrawable(R.drawable.bg_circle_red)
             btOk?.background = resources.getDrawable(R.drawable.bg_outer_red)
         }
@@ -597,37 +663,36 @@ class ActDocumentViewer : ActBase(),
     }
 
     //download pdf setelah semua ter approve
-    private fun checkPDF(){
-        val pdfFile = File(Environment.getExternalStorageDirectory().absolutePath+"/Digital Contract/"
-                +mContractId.toString()+"_"+mDocTitle+".pdf")
+    private fun checkPDF() {
+        val pdfFile = File(Environment.getExternalStorageDirectory().absolutePath + "/Digital Contract/"
+                + mContractId.toString() + "_" + mDocTitle + ".pdf")
 
 //        if(pdfFile.exists())
-            checkPermission()
+        checkPermission()
     }
 
-    private fun checkPermission(){
-        if(ContextCompat.checkSelfPermission(this,
-                Manifest.permission.WRITE_EXTERNAL_STORAGE)
-            != PackageManager.PERMISSION_GRANTED){
+    private fun checkPermission() {
+        if (ContextCompat.checkSelfPermission(this,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
 
             ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                KEY_PERMISSION_WRITE_EX)
-        }
-        else downloadPDF()
+                    KEY_PERMISSION_WRITE_EX)
+        } else downloadPDF()
     }
 
-    private fun downloadPDF(){
+    private fun downloadPDF() {
         var content = Config.BASE_URL + "export_signed/" + mContractId.toString() + "_" + mDocTitle + "_final.pdf"
 //        content = "https://drive.google.com/viewerng/viewer?embedded=true&url=$content"
-        DownloadFile().execute(content, mContractId.toString()+ "_" + mDocTitle + "_final.pdf")
+        DownloadFile().execute(content, mContractId.toString() + "_" + mDocTitle + "_final.pdf")
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        when(requestCode){
+        when (requestCode) {
             KEY_PERMISSION_WRITE_EX -> {
-                if(grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
                     downloadPDF()
-                else{
+                else {
                     showSnackbar("Write External Storage Permission isn't granted")
                 }
             }
@@ -646,17 +711,16 @@ class ActDocumentViewer : ActBase(),
             val fileUrl = params[0]
             val fileName = params[1]
             val extStorageDirectory = Environment.getExternalStorageDirectory().toString()
-            val folder = File(extStorageDirectory,"Digital Contract")
+            val folder = File(extStorageDirectory, "Digital Contract")
             folder.mkdir()
 
-            val pdfFile = File(folder,fileName)
+            val pdfFile = File(folder, fileName)
             try {
                 pdfFile.createNewFile()
-            }
-            catch (e:IOException){
+            } catch (e: IOException) {
                 e.printStackTrace()
             }
-            FileDownloader.downloadFile(fileUrl,pdfFile)
+            FileDownloader.downloadFile(fileUrl, pdfFile)
             return null
         }
 
@@ -671,23 +735,22 @@ class ActDocumentViewer : ActBase(),
 //        FileDownloadS
 //    }
 
-    open fun viewPDF(){
-        val pdfFile = File(Environment.getExternalStorageDirectory().absolutePath+"/Digital Contract/"
-                +mContractId.toString()+"_"+mDocTitle+"_final.pdf")
+    open fun viewPDF() {
+        val pdfFile = File(Environment.getExternalStorageDirectory().absolutePath + "/Digital Contract/"
+                + mContractId.toString() + "_" + mDocTitle + "_final.pdf")
 
-        if(pdfFile.exists()){
+        if (pdfFile.exists()) {
             val pdfIntent = Intent(Intent.ACTION_VIEW)
             pdfIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
 
             val apkURI = FileProvider.getUriForFile(this,
-                this.applicationContext
-                .packageName+".provider",pdfFile)
-            pdfIntent.setDataAndType(apkURI,"application/pdf")
+                    this.applicationContext
+                            .packageName + ".provider", pdfFile)
+            pdfIntent.setDataAndType(apkURI, "application/pdf")
             pdfIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             try {
                 startActivity(pdfIntent)
-            }
-            catch (e:ActivityNotFoundException){
+            } catch (e: ActivityNotFoundException) {
                 showSnackbar("No Application available to view PDF")
             }
         }
@@ -704,7 +767,7 @@ class ActDocumentViewer : ActBase(),
         val keyguardManager = getSystemService(KeyguardManager::class.java)
         if (!keyguardManager.isKeyguardSecure) {
             //user hasn't set up a fingerprint or lock screen.
-            Log.d("balao","fingerprint hasn't setup yet")
+            Log.d("balao", "fingerprint hasn't setup yet")
 //            purchaseButton.isEnabled = false
             sendSign()
             return
@@ -714,7 +777,7 @@ class ActDocumentViewer : ActBase(),
         if (!fingerprintManager.hasEnrolledFingerprints()) {
 //            purchaseButton.isEnabled = false
             //no fingerprints are registered
-             Log.d("balao","no fingerprint registered")
+            Log.d("balao", "no fingerprint registered")
             sendSign()
             return
         }
@@ -838,38 +901,101 @@ class ActDocumentViewer : ActBase(),
         body["id_user"] = mUserId.toString()
         body["id_contract"] = mContractId.toString()
         body["passphrase"] = passPhrase
-//        if (mUserRole == 5) body["penandatangan"] =  "112233455667788"
-//        else body["penandatangan"] =  "112234455667788"
+////        if (mUserRole == 5) body["penandatangan"] =  "112233455667788"
+////        else body["penandatangan"] =  "112234455667788"
         body["contract_title"] = mDocTitle
+//
+        Log.e("Body", body.toString());
+        onLoading()
+        postSignDoc()
 
-        disposable = serviceBSRE.sendSign(body)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnSubscribe {
-                onLoading()
-            }
-            .subscribe(
-                { result ->
-                    onComplete()
+//        disposable = serviceBSRE.sendSign(body)
+//            .subscribeOn(Schedulers.io())
+//            .observeOn(AndroidSchedulers.mainThread())
+//            .doOnSubscribe {
+//                Log.e("body doing ", body.toString())
+//
+//            }
+//            .subscribe(
+//                { result ->
+//                    onComplete()
+//
+//                    val obj = JSONObject(result.string())
+//
+//                    try {
+//                        val response = obj.getInt("response")?:0
+//                        if(response==1)
+//                            dialogSuccess("Sign Success, the document has been success to signed",3)
+//                        else
+//                            dialogFailed(response.toString())
+//                    }
+//                    catch (e : Exception) {
+//                        val message = obj.getString("message")?:""
+//                        dialogFailed(message)
+//                    }
+//                },
+//                { error ->
+//                    dialogFailed(error.message.toString())
+//                }
+//            )
+    }
 
-                    val obj = JSONObject(result.string())
+    private fun postSignDoc() {
+        val gson = GsonBuilder().setLenient().create()
+        val interceptor = HttpLoggingInterceptor()
+        interceptor.level = HttpLoggingInterceptor.Level.BODY
 
-                    try {
-                        val response = obj.getInt("response")?:0
-                        if(response==1)
-                            dialogSuccess("Sign Success, the document has been success to signed",3)
-                    }
-                    catch (e : Exception) {
-                        val message = obj.getString("message")?:""
-                        dialogFailed(message)
-                    }
-                },
-                { error ->
-                    onComplete()
-                    dialogFailed("Error occured, the document has been failed to signed")
-                    Log.d(TAG,"Change Status Error"+error.message)
-                }
+        val okHttpClient = OkHttpClient.Builder()
+            .connectTimeout(100, TimeUnit.SECONDS)
+            .writeTimeout(100, TimeUnit.SECONDS)
+            .readTimeout(100, TimeUnit.SECONDS)
+            .build()
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl(RetrofitApi.SIGN_DOC_URL)
+            .addConverterFactory(
+                GsonConverterFactory.create(gson)
             )
+            .client(okHttpClient)
+        val api = retrofit.build().create(RetrofitApi::class.java)
+
+        val call = api.signDoc("Json_sender2/get_token?id_user=" + mUserId.toString()
+                + "&id_contract=" + mContractId.toString() + "&passphrase=" + passPhrase + "&contract_title=" + mDocTitle,
+            "application/json")
+
+        call.enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                val result = response.body()?.string()
+
+                if (result == null){
+                    dialogFailed("Error occured, the document has been failed to signed")
+                }
+                else{
+                    if (result.contains("Passphrase anda salah")){
+                        dialogFailed("Passphrase anda salah")
+                    }
+                    else if(result.contains("response")){
+                        if (result.contains("1")){
+                            dialogSuccess("Sign Success, the document has been success to signed",3)
+                        }
+                        else{
+                            dialogFailed(result)
+                        }
+                    }
+                    else{
+                        dialogFailed(result)
+                    }
+                }
+                onComplete()
+                Log.e("Result", result);
+
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                onComplete()
+                dialogFailed(t.message.toString())
+            }
+        })
     }
 
     /**
@@ -878,6 +1004,7 @@ class ActDocumentViewer : ActBase(),
      */
     private fun tryEncrypt(cipher: Cipher) {
         try {
+            Log.e("Finger print", cipher.toString());
             showConfirmation(cipher.doFinal(SECRET_MESSAGE.toByteArray()))
         } catch (e: Exception) {
             when (e) {
@@ -911,9 +1038,9 @@ class ActDocumentViewer : ActBase(),
 
             val keyProperties = KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
             val builder = KeyGenParameterSpec.Builder(keyName, keyProperties)
-                .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
-                .setUserAuthenticationRequired(true)
-                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
+                    .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
+                    .setUserAuthenticationRequired(true)
+                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
 //                .setInvalidatedByBiometricEnrollment(invalidatedByBiometricEnrollment)
 
             keyGenerator.run {
@@ -932,7 +1059,7 @@ class ActDocumentViewer : ActBase(),
     }
 
     override fun errorFingerprint() {
-        Log.d("balao","fingerprint auth error")
+        Log.d("balao", "fingerprint auth error")
     }
 
     override fun noFingerprint() {
