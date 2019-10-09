@@ -23,6 +23,8 @@ open class Contract {
     open var OFFICER_SIGNATURE : String? = ""
     @field:SerializedName("OFFICER_CERTIFICATE")
     open var OFFICER_CERTIFICATE : String? = ""
+    @field:SerializedName("PDF_PATH")
+    open var PDF_PATH : String? = ""
 
 
 }

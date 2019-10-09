@@ -211,7 +211,6 @@ class MainActivity : ActBaseFullScreen(), NavigationView.OnNavigationItemSelecte
     private fun onSuccessCheckImei(result : ResponseBody){
         val obj = JSONObject(result.string())
         imeiResponse = obj.getInt("response")
-        Log.e("Result 1", imeiResponse.toString())
     }
 
     private fun onSuccessGetContract(result : ResultContract){
@@ -243,6 +242,7 @@ class MainActivity : ActBaseFullScreen(), NavigationView.OnNavigationItemSelecte
     override fun invoke(data: Contract, pos: Int, myStatus: Int) {
         val i = Intent(this@MainActivity, ActDocumentViewer::class.java)
         i.putExtra("DOC_TITLE", data.CONTRACT_TITLE)
+        i.putExtra("DOC_PATH", data.PDF_PATH)
         i.putExtra("DOC_ID", data.CONTRACT_ID)
         i.putExtra("DOC_STATUS", myStatus)
         if(data.VENDOR_CERTIFICATE=="3" && data.OFFICER_CERTIFICATE == "3") i.putExtra("DOC_DOWNLOAD", true)

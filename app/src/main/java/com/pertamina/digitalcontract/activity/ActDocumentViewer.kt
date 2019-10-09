@@ -9,6 +9,7 @@ import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.AnimationDrawable
 import android.hardware.fingerprint.FingerprintManager
+import android.net.Uri
 import android.os.*
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
@@ -57,6 +58,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
 import java.io.IOException
+import java.net.URL
+import java.net.URLEncoder
 import java.security.*
 import java.security.cert.CertificateException
 import java.util.*
@@ -78,6 +81,7 @@ class ActDocumentViewer : ActBase(),
     private var mPadSigned = false
 
     private var mDocTitle = ""//, mRole = "";
+    private var mDocPath = ""
     private var mUserRole: Int = 0
     private var mContractId: Int = 0
     private var mContractStatus: Int = 0
@@ -101,6 +105,7 @@ class ActDocumentViewer : ActBase(),
 
         session = SessionManager(this)
         mDocTitle = intent.getStringExtra("DOC_TITLE")
+        mDocPath = intent.getStringExtra("DOC_PATH")
         mContractId = intent.getStringExtra("DOC_ID").toInt()
         mContractStatus = intent.getIntExtra("DOC_STATUS", -1)
         isDownloaded = intent.getBooleanExtra("DOC_DOWNLOAD", false)
@@ -356,9 +361,13 @@ class ActDocumentViewer : ActBase(),
     }
 
     private fun updateDocumentView() {
-        var content = Config.BASE_URL + "export/" + mContractId.toString() + "_" + mDocTitle + ".pdf"
+        var title = mDocPath
+
+        title = URLEncoder.encode(title, "UTF-8")
+        var content = Config.BASE_URL + "export/" + title + ".pdf"
         content = "https://drive.google.com/viewerng/viewer?embedded=true&url=$content"
-        Log.e("Url doc", content);
+        Log.e("Url doc", content)
+
         webView.loadUrl(content)
     }
 
@@ -682,9 +691,9 @@ class ActDocumentViewer : ActBase(),
     }
 
     private fun downloadPDF() {
-        var content = Config.BASE_URL + "export_signed/" + mContractId.toString() + "_" + mDocTitle + "_final.pdf"
+        var content = Config.BASE_URL + "export_signed/" + mContractId.toString() + "_" + mDocPath + "_final.pdf"
 //        content = "https://drive.google.com/viewerng/viewer?embedded=true&url=$content"
-        DownloadFile().execute(content, mContractId.toString() + "_" + mDocTitle + "_final.pdf")
+        DownloadFile().execute(content, mContractId.toString() + "_" + mDocPath + "_final.pdf")
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -737,7 +746,7 @@ class ActDocumentViewer : ActBase(),
 
     open fun viewPDF() {
         val pdfFile = File(Environment.getExternalStorageDirectory().absolutePath + "/Digital Contract/"
-                + mContractId.toString() + "_" + mDocTitle + "_final.pdf")
+                + mContractId.toString() + "_" + mDocPath + "_final.pdf")
 
         if (pdfFile.exists()) {
             val pdfIntent = Intent(Intent.ACTION_VIEW)
@@ -897,15 +906,6 @@ class ActDocumentViewer : ActBase(),
     }
 
     private fun sendSign(){
-        val body = HashMap<String, String>()
-        body["id_user"] = mUserId.toString()
-        body["id_contract"] = mContractId.toString()
-        body["passphrase"] = passPhrase
-////        if (mUserRole == 5) body["penandatangan"] =  "112233455667788"
-////        else body["penandatangan"] =  "112234455667788"
-        body["contract_title"] = mDocTitle
-//
-        Log.e("Body", body.toString());
         onLoading()
         postSignDoc()
 
@@ -941,6 +941,16 @@ class ActDocumentViewer : ActBase(),
     }
 
     private fun postSignDoc() {
+        val body = HashMap<String, String>()
+        body["id_user"] = mUserId.toString()
+        body["id_contract"] = mContractId.toString()
+        body["passphrase"] = passPhrase
+////        if (mUserRole == 5) body["penandatangan"] =  "112233455667788"
+////        else body["penandatangan"] =  "112234455667788"
+        body["contract_title"] = mDocTitle
+        body["contract_path"] = mDocPath
+        Log.e("Body", body.toString());
+
         val gson = GsonBuilder().setLenient().create()
         val interceptor = HttpLoggingInterceptor()
         interceptor.level = HttpLoggingInterceptor.Level.BODY
@@ -952,15 +962,16 @@ class ActDocumentViewer : ActBase(),
             .build()
 
         val retrofit = Retrofit.Builder()
-            .baseUrl(RetrofitApi.SIGN_DOC_URL)
+            .baseUrl(RetrofitApi.SIGN_DOC_JSON_SENDER2)
             .addConverterFactory(
                 GsonConverterFactory.create(gson)
             )
             .client(okHttpClient)
         val api = retrofit.build().create(RetrofitApi::class.java)
 
-        val call = api.signDoc("Json_sender2/get_token?id_user=" + mUserId.toString()
-                + "&id_contract=" + mContractId.toString() + "&passphrase=" + passPhrase + "&contract_title=" + mDocTitle,
+//        val url = "Json_sender2/get_token?id_user=" + mUserId.toString() + "&id_contract=" + mContractId.toString() + "&passphrase=" + passPhrase + "&contract_title=" + mDocTitle + "&contract_path=" + mDocPath
+
+        val call = api.signDoc(body,
             "application/json")
 
         call.enqueue(object : Callback<ResponseBody> {
