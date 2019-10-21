@@ -56,6 +56,18 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+        <com.pertamina.digitalcontract.util.FontAwasomeTextView
+            android:id="@+id/tvStatus2"
+            android:layout_width="@dimen/_20dp"
+            android:layout_height="match_parent"
+            android:textColor="@color/blue"
+            android:textSize="@dimen/_14sp"
+            android:text="@string/fa_mail_open"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintRight_toLeftOf="@+id/tvStatus"
+            android:visibility="gone"
+                />
 
         <TextView
             android:id="@+id/tvDate"

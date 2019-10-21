@@ -108,7 +108,7 @@ interface ApiInterface {
                     .baseUrl(Config.BASE_URL_API)
                     .client(client)
                     .build()
-            Log.e("Retro", retrofit.baseUrl().toString());
+            Log.e("Retro yg pake", retrofit.baseUrl().toString());
             return retrofit.create(ApiInterface::class.java)
         }
 

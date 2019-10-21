@@ -182,16 +182,7 @@ class MainActivity : ActBaseFullScreen(), NavigationView.OnNavigationItemSelecte
         body2["status"] = code
         body2["id_user"] = session.id?:""
 
-        /*disposable = service.getContract(body2)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .doOnSubscribe { onLoading() }
-            .subscribe(
-                { result -> onSuccessGetContract(result) },
-                { error -> errorKoneksi(error) }
-            )*/
-
-        Log.e("Body 1", body.toString());
+        Log.e("Body 1", mUserRole.toString());
         Log.e("Body 2", body2.toString());
 
         disposable = service.checkImei(body)
@@ -242,16 +233,16 @@ class MainActivity : ActBaseFullScreen(), NavigationView.OnNavigationItemSelecte
     override fun invoke(data: Contract, pos: Int, myStatus: Int) {
         val i = Intent(this@MainActivity, ActDocumentViewer::class.java)
         i.putExtra("DOC_TITLE", data.CONTRACT_TITLE)
-        i.putExtra("DOC_PATH", data.PDF_PATH)
+        if(data.PDF_PATH != null){
+            i.putExtra("DOC_PATH", data.PDF_PATH)
+        }else{
+            i.putExtra("DOC_PATH", "")
+        }
         i.putExtra("DOC_ID", data.CONTRACT_ID)
         i.putExtra("DOC_STATUS", myStatus)
         if(data.VENDOR_CERTIFICATE=="3" && data.OFFICER_CERTIFICATE == "3") i.putExtra("DOC_DOWNLOAD", true)
         else i.putExtra("DOC_DOWNLOAD", false)
-        i.putExtra("DOC_STATUS", myStatus)
         startActivity(i)
-        /*Log.d("balao",data.CONTRACT_ID)
-        Log.d("balao",data.CONTRACT_TITLE)
-        Log.d("balao",session.id)*/
 
     }
 }

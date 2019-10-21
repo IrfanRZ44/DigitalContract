@@ -13,6 +13,7 @@
         android:id="@+id/rbReviewer"
         android:textColor="@color/material_grey_600"
         android:textSize="@dimen/_14sp"
+        android:theme="@style/Theme.AppTheme.CustomRadioButton"
         fontPath="fonts/Montserrat-SemiBold.ttf"
         tools:ignore="MissingPrefix"
         />

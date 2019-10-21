@@ -4,7 +4,8 @@ object Config {
     val SHARED_PREF = ""
     //    val BASE_URL = "localhost:8080/phpmyadmin/digital_contract/"
 //    val BASE_URL = "http://digitalcontract.mor7.com/"
-    val BASE_URL = "http://digitalcontractv3.kabirland.technology/"
+//    val BASE_URL = "http://digitalcontractv3.kabirland.technology/"
+    val BASE_URL = "http://digitalcontractv2.mor7.com/"
 
 //    val BASE_URL = "http://pertamina.kabirland.technology/"
 //    val BASE_URL = "http://digitalcontractv3.kabirland.technology/"

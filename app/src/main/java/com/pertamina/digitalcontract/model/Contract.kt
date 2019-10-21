@@ -25,6 +25,22 @@ open class Contract {
     open var OFFICER_CERTIFICATE : String? = ""
     @field:SerializedName("PDF_PATH")
     open var PDF_PATH : String? = ""
+    @field:SerializedName("LEGAL_ID")
+    open var LEGAL_ID : String? = ""
+    @field:SerializedName("FINANCE_ID")
+    open var FINANCE_ID : String? = ""
+    @field:SerializedName("HSSE_ID")
+    open var HSSE_ID : String? = ""
+    @field:SerializedName("HSSE_STATUS")
+    open var HSSE_STATUS : String? = ""
+    @field:SerializedName("FUNGSI_ID")
+    open var FUNGSI_ID : String? = ""
+    @field:SerializedName("REVIEWER_ID")
+    open var REVIEWER_ID : String? = ""
+    @field:SerializedName("PUBLISHED")
+    open var PUBLISHED : String? = ""
+
+
 
 
 }

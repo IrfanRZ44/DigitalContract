@@ -27,7 +27,9 @@
                 android:background="@drawable/grad_blue_red"
                 android:gravity="center"
                 android:orientation="vertical"
-                android:padding="16dp">
+                android:padding="16dp"
+                android:layout_marginBottom="@dimen/_5dp"
+                    >
 
                 <TextView
                     android:id="@+id/dialog_universal_warning_title"
@@ -36,9 +38,19 @@
                     android:text="Choose Reviewer"
                     android:textColor="@color/white"
                     android:textSize="@dimen/_18sp"
-                    fontPath="fonts/Montserrat-SemiBold.ttf" />
+                    fontPath="fonts/Montserrat-SemiBold.ttf"
+                        />
             </LinearLayout>
-
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal"
+                    android:textSize="@dimen/_14sp"
+                    android:textColor="@color/cpb_red"
+                    android:textAlignment="center"
+                    android:id="@+id/textNone"
+                    android:visibility="gone"
+                    />
             <androidx.recyclerview.widget.RecyclerView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

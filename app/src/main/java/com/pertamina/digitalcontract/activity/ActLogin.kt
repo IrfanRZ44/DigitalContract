@@ -13,28 +13,16 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.google.firebase.FirebaseApp
 import com.google.firebase.iid.FirebaseInstanceId
-import com.google.gson.GsonBuilder
-import com.pertamina.digitalcontract.BuildConfig
 import com.pertamina.digitalcontract.Login
 import com.pertamina.digitalcontract.R
-import com.pertamina.digitalcontract.TesRetrofit.RetrofitApi
-import com.pertamina.digitalcontract.model.ModelLogin
 import com.pertamina.digitalcontract.rest.ApiInterface
 import com.pertamina.digitalcontract.util.SessionManager
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.act_login.*
-import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
-import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Call
-import retrofit2.Callback
-import retrofit2.Response
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper
-import java.util.concurrent.TimeUnit
 
 class ActLogin : AppCompatActivity(), View.OnClickListener {
 

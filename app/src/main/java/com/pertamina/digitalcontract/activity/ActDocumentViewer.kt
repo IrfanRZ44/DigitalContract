@@ -3,29 +3,27 @@ package com.pertamina.digitalcontract.activity
 import android.Manifest
 import android.app.Dialog
 import android.app.KeyguardManager
+import android.app.ProgressDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.drawable.AnimationDrawable
 import android.hardware.fingerprint.FingerprintManager
-import android.net.Uri
 import android.os.*
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
 import android.text.Editable
 import android.text.TextWatcher
+import android.transition.Visibility
 import android.util.Log
 import android.view.View
 import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.Button
-import android.widget.EditText
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.annotation.RequiresApi
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -35,10 +33,13 @@ import androidx.recyclerview.widget.RecyclerView
 import com.github.gcacace.signaturepad.views.SignaturePad
 import com.google.gson.GsonBuilder
 import com.pertamina.digitalcontract.*
-import com.pertamina.digitalcontract.TesRetrofit.RetrofitApi
+import com.pertamina.digitalcontract.rest.RetrofitApi
 import com.pertamina.digitalcontract.adapter.AdapterExtra
+import com.pertamina.digitalcontract.adapter.AdapterLogRejected
 import com.pertamina.digitalcontract.adapter.AdapterReviewer
 import com.pertamina.digitalcontract.fingerprint.FingerprintAuthenticationDialogFragment
+import com.pertamina.digitalcontract.model.ModelLogRejected
+import com.pertamina.digitalcontract.model.ModelReviewer
 import com.pertamina.digitalcontract.rest.ApiInterface
 import com.pertamina.digitalcontract.util.*
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -49,6 +50,9 @@ import kotlinx.android.synthetic.main.sub_fab.*
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
 import okhttp3.logging.HttpLoggingInterceptor
+import org.jetbrains.anko.backgroundColor
+import org.jetbrains.anko.backgroundResource
+import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.textColor
 import org.json.JSONObject
 import retrofit2.Call
@@ -58,17 +62,17 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.io.File
 import java.io.IOException
-import java.net.URL
 import java.net.URLEncoder
 import java.security.*
 import java.security.cert.CertificateException
 import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.crypto.*
+import kotlin.collections.ArrayList
 
 
 class ActDocumentViewer : ActBase(),
-        FingerprintAuthenticationDialogFragment.Callback, (Extra, Int) -> Unit {
+    FingerprintAuthenticationDialogFragment.Callback, (Extra, Int) -> Unit {
 
     private lateinit var keyStore: KeyStore
     private lateinit var keyGenerator: KeyGenerator
@@ -79,7 +83,6 @@ class ActDocumentViewer : ActBase(),
     private var mSignPad: SignaturePad? = null
     private var mRejectionNote: EditText? = null            //catatan jika di reject
     private var mPadSigned = false
-
     private var mDocTitle = ""//, mRole = "";
     private var mDocPath = ""
     private var mUserRole: Int = 0
@@ -88,6 +91,8 @@ class ActDocumentViewer : ActBase(),
     private var mUserId: String? = null//, mWebViewContent;
     private var imeiResponse: Int? = 0
     private var canApprove = false
+    private var canChooseReviewer = false
+    private var canPublish = false
     private var webviewLoad = false
     private var isDownloaded = false
     private var passPhrase = ""
@@ -111,7 +116,20 @@ class ActDocumentViewer : ActBase(),
         isDownloaded = intent.getBooleanExtra("DOC_DOWNLOAD", false)
         mUserRole = session.role?.toInt() ?: -1
         mUserId = session.id
-        canApprove = (mUserRole < 5) or (mUserRole == 7) //3 - finance 4 - legal 5 - officer 6 - vendor 7 - reviewer
+
+        Log.e("User roleasd ", Integer.toString(mUserRole))
+        canApprove =
+            (mUserRole == 39) or (mUserRole == 40) or (mUserRole == 3) or (mUserRole == 33) or ((mUserRole >= 22) and (mUserRole <= 32) or (mUserRole == 34) or (mUserRole == 35) or (mUserRole == 36))
+        canChooseReviewer =
+            (mUserRole == 38) or (mUserRole == 37) or (mUserRole == 19) or ((mUserRole >= 8) and (mUserRole <= 18)) or (mUserRole == 20) or (mUserRole == 21)
+        canPublish = (mUserRole == 41)
+
+        if (canChooseReviewer) {
+            if (mContractStatus == 6 || mContractStatus == 4 || mContractStatus == 5) {
+                canApprove = true
+                canChooseReviewer = false
+            }
+        }
         title = mDocTitle
 
         dialog = Dialog(this, R.style.CustomDialogTheme)
@@ -148,7 +166,11 @@ class ActDocumentViewer : ActBase(),
                 //tampilkan aksi hanya setelah web load
             }
 
-            override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+            override fun onReceivedError(
+                view: WebView?,
+                request: WebResourceRequest?,
+                error: WebResourceError?
+            ) {
                 super.onReceivedError(view, request, error)
                 onError()
 
@@ -170,9 +192,12 @@ class ActDocumentViewer : ActBase(),
             dialogExtra()
         }
 
-        if (mContractId != -1 && mContractStatus == 0) {
-            changeStatusContract(1, "", false)
+        if ((canApprove) or (mUserRole == 5)) {
+            if (mContractId != -1 && mContractStatus == 0) {
+                changeStatusContract(1, "", false)
+            }
         }
+
 
         //Only main FAB is visible in the beginning
         closeSubMenusFab()
@@ -215,17 +240,17 @@ class ActDocumentViewer : ActBase(),
         body2["id_user"] = session.id ?: ""
 
         disposable = service.checkImei(body)
-                .flatMap { result ->
-                    onSuccessCheckImei(result)
-                    return@flatMap service.getDocument(body2)
-                }
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { onLoading() }
-                .subscribe(
-                        { result -> onSuccessGetDocument(result) },
-                        { error -> errorKoneksi(error) }
-                )
+            .flatMap { result ->
+                onSuccessCheckImei(result)
+                return@flatMap service.getDocument(body2)
+            }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSubscribe { onLoading() }
+            .subscribe(
+                { result -> onSuccessGetDocument(result) },
+                { error -> errorKoneksi(error) }
+            )
     }
 
     //get pdf saja
@@ -235,13 +260,13 @@ class ActDocumentViewer : ActBase(),
         body["id_user"] = session.id ?: ""
 
         disposable = service.getDocument(body)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe { onLoading() }
-                .subscribe(
-                        { result -> onSuccessGetDocument(result) },
-                        { error -> errorKoneksi(error) }
-                )
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSubscribe { onLoading() }
+            .subscribe(
+                { result -> onSuccessGetDocument(result) },
+                { error -> errorKoneksi(error) }
+            )
     }
 
 
@@ -264,11 +289,14 @@ class ActDocumentViewer : ActBase(),
 
                 for (i in 0..(objAdditional.length() - 1)) {
                     val item = objAdditional.getJSONObject(i)
-                    listPdf?.add(Extra(item.getString("NAME"),
+                    listPdf?.add(
+                        Extra(
+                            item.getString("NAME"),
                             item.getString("SIZE"),
                             item.getString("TOKEN"),
                             item.getString("PATH")
-                    ))
+                        )
+                    )
                 }
 
                 layoutFabAttachment.visibility = View.VISIBLE
@@ -279,82 +307,88 @@ class ActDocumentViewer : ActBase(),
 
             updateDocumentView()
 
+            if (canPublish){
+                if (mContractStatus == 3){
+                    fabApprove.isEnabled = false
+                    InitPublish("Published")
+                }
+                else{
+                    fabApprove.isEnabled = true
+                    InitPublish("Publish")
+                }
+            }
             //jika contract masih pending diperlukan aksi
-            if (mContractStatus <= 1) {
+            else if ((mContractStatus <= 1) or (mContractStatus == 6)) {
                 //seleksi tombol antara (approve dan reject) atau (sign)
-                if (canApprove) {                                                       //seleksi aksi yang sesuai untuk contract
-                    InitApprover()                                                      //selain vendor dan officer bisa approve tombol
-                } else {
-                    if (mUserRole == 8) {
-                        InitChooseViewer()
-                    } else {
-                        InitSigner()                                                        //vendor dan officer hanya bisa sign
+                if (canApprove) { //seleksi aksi yang sesuai untuk contract
+                    if (mContractStatus <= 1) {
+                        InitApprover("Staff", "Request", 0)                                                      //selain vendor dan officer bisa approve tombol
+                    } else if (mContractStatus == 6) {
+                        InitApprover("Manager", "Request", 0)          //selain vendor dan officer bisa approve tombol
                     }
+                } else if (canChooseReviewer) {
+                    cekContractReviewer()
+                } else {
+                    InitSigner()                                                        //vendor dan officer hanya bisa sign
                 }
             }
             //sudah pernah ada aksi sebelumnya jadi tidak ada aksi
             else {
                 if (canApprove) {
                     //contract status 2 berarti reject
-                    val rejected = mContractStatus == 2
-                    if (rejected) {
-                        layoutFabApprove.visibility = View.GONE
-                        layoutFabReject.visibility = View.VISIBLE
-                        layoutFabSign.visibility = View.GONE
-                        tvReject.text = "Rejected"
-                        tvReject.setTextColor(resources.getColor(R.color.cpb_red))
-                    } else {
+                    if (mContractStatus == 2) {
+                        fabReject.isEnabled = false
+                        InitApprover("Staff", "Reject", 0)
+                    } else if (mContractStatus == 3) {
+                        fabApprove.isEnabled = false
+                        InitApprover("Staff", "Apprrove", 0)
+                    } else if (mContractStatus == 4) {
+                        if ((mUserRole == 39) or (mUserRole == 40) or (mUserRole == 33) or (mUserRole == 3) or ((mUserRole >= 22) and (mUserRole <= 32) or (mUserRole == 34) or (mUserRole == 35))){
+                            fabReject.isEnabled = true
+                            fabApprove.isEnabled = true
+                            fabSign.isEnabled = true
+                            tvSign.text = "Reason Rejected"
+                            fabSign.setImageResource(R.drawable.ic_memo_white)
+                            fabSign.setBackgroundTintList(getResources().getColorStateList(R.color.material_blue_grey_600));
+
+                            InitApprover("Staff", "Request", 1)
+                        }  else{
+                            fabReject.isEnabled = false
+                            InitApprover("Manager", "Reject", 0)
+                        }
+                    } else if (mContractStatus == 5){
+                        fabApprove.isEnabled = false
+                        InitApprover("Staff", "Apprrove", 0)
+                    }
+                    else {
                         layoutFabApprove.visibility = View.VISIBLE
                         layoutFabReject.visibility = View.GONE
                         layoutFabSign.visibility = View.GONE
                         tvApprove.text = "Approved"
                         tvApprove.setTextColor(resources.getColor(R.color.cpb_green_dark))
                     }
+                } else if (canChooseReviewer) {
+                    cekContractReviewer()
                 } else {
-                    if (mUserRole == 8) {
-                        layoutFabApprove.visibility = View.GONE
-                        layoutFabReject.visibility = View.GONE
-                        layoutFabSign.visibility = View.VISIBLE
-                        tvSign.text = "Choose"
-                        tvSign.setTextColor(resources.getColor(R.color.cpb_green_dark))
+                    layoutFabApprove.visibility = View.GONE
+                    layoutFabReject.visibility = View.GONE
+                    layoutFabSign.visibility = View.VISIBLE
+                    tvSign.text = "Signed"
+                    tvSign.setTextColor(resources.getColor(R.color.cpb_green_dark))
 
-                        if (isDownloaded) {
-                            layoutFabDownload.visibility = View.VISIBLE
-                            fabDownload.setOnClickListener {
-                                //            checkPDF()
-                                checkPermission()
-                                if (fabExpanded == true) {
-                                    closeSubMenusFab()
-                                } else {
-                                    openSubMenusFab()
-                                }
-                            }
-                        }
-                    } else {
-                        layoutFabApprove.visibility = View.GONE
-                        layoutFabReject.visibility = View.GONE
-                        layoutFabSign.visibility = View.VISIBLE
-                        tvSign.text = "Signed"
-                        tvSign.setTextColor(resources.getColor(R.color.cpb_green_dark))
-
-                        if (isDownloaded) {
-                            layoutFabDownload.visibility = View.VISIBLE
-                            fabDownload.setOnClickListener {
-                                //            checkPDF()
-                                checkPermission()
-                                if (fabExpanded == true) {
-                                    closeSubMenusFab()
-                                } else {
-                                    openSubMenusFab()
-                                }
+                    if (isDownloaded) {
+                        layoutFabDownload.visibility = View.VISIBLE
+                        fabDownload.setOnClickListener {
+                            //            checkPDF()
+                            checkPermission()
+                            if (fabExpanded == true) {
+                                closeSubMenusFab()
+                            } else {
+                                openSubMenusFab()
                             }
                         }
                     }
                 }
-
-                fabSign.isEnabled = false
-                fabApprove.isEnabled = false
-                fabReject.isEnabled = false
 //                tidak bisa di klik karena sudah pernah ada aksi dan hanya 1 button yg muncul
             }
         }
@@ -372,50 +406,41 @@ class ActDocumentViewer : ActBase(),
     }
 
     //fungsi hanya jika bisa approve
-    private fun InitApprover() {
-        layoutFabApprove.visibility = View.VISIBLE
-        layoutFabReject.visibility = View.VISIBLE
+    private fun InitApprover(requestRole: String, requestShowing : String, requestType : Int) {
+        if (requestShowing == "Apprrove"){
+            layoutFabApprove.visibility = View.VISIBLE
+            layoutFabReject.visibility = View.GONE
+            tvApprove.text = "Approved"
+        } else if (requestShowing == "Reject"){
+            layoutFabApprove.visibility = View.GONE
+            layoutFabReject.visibility = View.VISIBLE
+            tvReject.text = "Rejected"
+        } else {
+            layoutFabApprove.visibility = View.VISIBLE
+            layoutFabReject.visibility = View.VISIBLE
+            tvApprove.text = "Approve"
+            tvReject.text = "Reject"
+        }
         layoutFabSign.visibility = View.GONE
-        mDialogL?.setContentView(R.layout.dialog_universal_warning)
-
-        //3 = approved
-        val okBtn = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_ok)
-        val cancelBtn = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_cancel)
-        okBtn?.setOnClickListener {
-            mDialogL?.dismiss()
-            changeStatusContract(3, "", true)
-        }
-        cancelBtn?.setOnClickListener { mDialogL!!.dismiss() }
-
-        mDialogR?.setContentView(R.layout.dialog_reject)
-        val okBtnR = mDialogR?.findViewById<TextView>(R.id.dialog_universal_warning_ok)
-        mRejectionNote = mDialogR?.findViewById<EditText>(R.id.rejection)
-        mRejectionNote?.addTextChangedListener(object : TextWatcher {
-            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
-
-            }
-
-            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
-
-            }
-
-            override fun afterTextChanged(s: Editable) {
-                okBtnR?.isEnabled = mRejectionNote?.text?.length ?: 0 > 0
-            }
-        })
-
-
-        //2 = reject
-        okBtnR?.isEnabled = mRejectionNote?.text?.length ?: 0 > 0
-        okBtnR?.setOnClickListener {
-            mDialogR?.dismiss()
-            changeStatusContract(2, mRejectionNote?.text.toString(), true)
-        }
-        val cancelBtnR = mDialogR?.findViewById<TextView>(R.id.dialog_universal_warning_cancel)
-        cancelBtnR?.setOnClickListener { mDialogR?.dismiss() }
 
         fabApprove.setOnClickListener {
+            mDialogL?.setContentView(R.layout.dialog_universal_warning)
             mDialogL?.show()
+
+
+            //3 = approved
+            val okBtn = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_ok)
+            val cancelBtn = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_cancel)
+            okBtn?.setOnClickListener {
+                mDialogL?.dismiss()
+                if (requestRole == "Manager") {
+                    changeStatusContract(5, "", true)
+                } else {
+                    changeStatusContract(3, "", true)
+                }
+            }
+            cancelBtn?.setOnClickListener { mDialogL!!.dismiss() }
+
             if (fabExpanded == true) {
                 closeSubMenusFab()
             } else {
@@ -423,6 +448,39 @@ class ActDocumentViewer : ActBase(),
             }
         }
         fabReject.setOnClickListener {
+            mDialogR?.setContentView(R.layout.dialog_reject)
+            val okBtnR = mDialogR?.findViewById<TextView>(R.id.dialog_universal_warning_ok)
+            mRejectionNote = mDialogR?.findViewById<EditText>(R.id.rejection)
+            mRejectionNote?.addTextChangedListener(object : TextWatcher {
+                override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
+
+                }
+
+                override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
+
+                }
+
+                override fun afterTextChanged(s: Editable) {
+                    okBtnR?.isEnabled = mRejectionNote?.text?.length ?: 0 > 0
+                }
+            })
+
+
+            //2 = reject
+            if (mContractStatus != 6) {
+                okBtnR?.isEnabled = mRejectionNote?.text?.length ?: 0 > 0
+            }
+            okBtnR?.setOnClickListener {
+                mDialogR?.dismiss()
+                if (requestRole == "Manager") {
+                    changeStatusContract(4, mRejectionNote?.text.toString(), true)
+                } else {
+                    changeStatusContract(2, mRejectionNote?.text.toString(), true)
+                }
+            }
+            val cancelBtnR = mDialogR?.findViewById<TextView>(R.id.dialog_universal_warning_cancel)
+            cancelBtnR?.setOnClickListener { mDialogR?.dismiss() }
+
             mDialogR?.show()
             if (fabExpanded == true) {
                 closeSubMenusFab()
@@ -430,8 +488,135 @@ class ActDocumentViewer : ActBase(),
                 openSubMenusFab()
             }
         }
+
+        if (requestType == 1){
+            layoutFabSign.visibility = View.VISIBLE
+
+            fabSign.isEnabled = true
+            fabSign.setOnClickListener {
+                mDialogL?.setContentView(R.layout.dialog_rejected_note)
+
+                val cancelBtn = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_cancel)
+                val textNone = mDialogL?.findViewById<TextView>(R.id.textNone)
+                val rcNote = mDialogL?.findViewById<RecyclerView>(R.id.rcNote)
+                val progressLog = mDialogL?.findViewById<ImageView>(R.id.progressLog)
+
+                progressLog?.visibility = View.VISIBLE
+                progressLog?.setBackgroundResource(R.drawable.animation_loading)
+                lateinit var animLog : AnimationDrawable
+                animLog = progressLog?.background as AnimationDrawable
+
+                animLog.start()
+
+                textNone?.text = "Gagal mendapatkan Alasan"
+
+                rcNote?.setHasFixedSize(true)
+                rcNote?.layoutManager = LinearLayoutManager(this)
+                rcNote?.let { it1 -> textNone?.let { it2 -> progressLog?.let { it3 ->
+                    getNoteRejected(it1, it2,
+                        it3
+                    )
+                } } }
+                cancelBtn?.setOnClickListener { mDialogL!!.dismiss() }
+
+                mDialogL?.show()
+
+                if (fabExpanded == true) {
+                    closeSubMenusFab()
+                } else {
+                    openSubMenusFab()
+                }
+            }
+        }
     }
 
+    private fun getNoteRejected(rcNote : RecyclerView, textNone: TextView, progressDialog : ImageView){
+        var jenisMgr = ""
+
+        //role user  37 = MGR Finance, 38 = MGR Legal, 19 = MGR HSSE
+        //role user  39 = Staff Finance, 40 = Staff Legal, 33 = Staff HSSE
+        if (mUserRole == 39) {
+            jenisMgr = "FINANCE_NOTE"
+        } else if (mUserRole == 40) {
+            jenisMgr = "LEGAL_NOTE"
+        } else if (mUserRole == 33) {
+            jenisMgr = "HSSE_NOTE"
+        } else if ((mUserRole >= 22) and (mUserRole <= 32) or (mUserRole == 34) or (mUserRole == 35)) {
+            jenisMgr = "REVIEWER_NOTE"
+        }
+
+        val body = HashMap<String, String>()
+        body["id_request"] = jenisMgr
+        body["id_contract"] = mContractId.toString()
+
+        Log.e("Empty", body.toString())
+
+        val gson = GsonBuilder().setLenient().create()
+        val interceptor = HttpLoggingInterceptor()
+        interceptor.level = HttpLoggingInterceptor.Level.BODY
+
+        val okHttpClient = OkHttpClient.Builder()
+            .connectTimeout(100, TimeUnit.SECONDS)
+            .writeTimeout(100, TimeUnit.SECONDS)
+            .readTimeout(100, TimeUnit.SECONDS)
+            .build()
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl(RetrofitApi.JSON_SENDER1)
+            .addConverterFactory(
+                GsonConverterFactory.create(gson)
+            )
+            .client(okHttpClient)
+        val api = retrofit.build().create(RetrofitApi::class.java)
+
+        val call = api.getLogContract(
+            body,
+            "application/json"
+        )
+
+        var listNote : ArrayList<ModelLogRejected>
+        listNote = ArrayList()
+
+        val adapter = AdapterLogRejected(listNote, this)
+        rcNote?.adapter = adapter
+
+        call.enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                progressDialog.visibility = View.GONE
+                val result = response.body()
+                val message = result?.string()
+
+                if (message?.contains("Error")!!) {
+                    textNone.visibility = View.VISIBLE
+                } else {
+                    textNone.visibility = View.GONE
+                    val data = message.split("\n")
+
+                    var a = 0
+
+                    listNote.removeAll(listNote)
+                    while (a < data.size){
+                        if (data[a].contains("Manager")){
+                            val isi = data[a].split(" = ")
+
+                            if(isi[2].length > 2){
+                                listNote.add(ModelLogRejected(isi[0], isi[1], isi[2]))
+                                adapter.notifyDataSetChanged()
+                            }
+                        }
+                        a++
+                    }
+                }
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                progressDialog.visibility = View.GONE
+                Log.e("Log", t.message.toString())
+//                textNone.text = t.message.toString()
+                textNone.visibility = View.VISIBLE
+            }
+        })
+    }
 
     //fungsi hanya untuk yang bisa tanda tangan (officer & vendor)
     private fun InitSigner() {
@@ -476,34 +661,45 @@ class ActDocumentViewer : ActBase(),
         }
     }
 
-    private fun InitChooseViewer() {
-        layoutFabApprove.visibility = View.GONE
+    //fungsi hanya jika bisa publish
+    private fun InitPublish(text : String) {
+        layoutFabSign.visibility = View.GONE
         layoutFabReject.visibility = View.GONE
-        layoutFabSign.visibility = View.VISIBLE
+        layoutFabApprove.visibility = View.VISIBLE
+        tvApprove.text = text
+        tvApprove.setTextColor(resources.getColor(R.color.cpb_green_dark))
 
-        tvSign.text = resources.getString(R.string.choose_viewer)
-        GlideApp.with(this).load(R.drawable.ic_check2_white).into(fabSign)
+        mDialogL?.setContentView(R.layout.dialog_universal_warning)
+        val dialog_universal_warning_text = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_text)
 
-        mDialogL?.setContentView(R.layout.dialog_choose_reviewer)
+        dialog_universal_warning_text?.text = resources.getString(R.string.approve_publish)
+        //1 = publish
+        val okBtn = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_ok)
         val cancelBtn = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_cancel)
-        val rcReviewer = mDialogL?.findViewById<RecyclerView>(R.id.rcReviewer)
+        okBtn?.setOnClickListener {
+            mDialogL?.dismiss()
+            publishContract(1)
+        }
+        cancelBtn?.setOnClickListener { mDialogL!!.dismiss() }
 
-        val list = ArrayList<String>()
+        mDialogR?.setContentView(R.layout.dialog_reject)
+        val okBtnR = mDialogR?.findViewById<TextView>(R.id.dialog_universal_warning_ok)
+        mRejectionNote = mDialogR?.findViewById<EditText>(R.id.rejection)
+        mRejectionNote?.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence, start: Int, count: Int, after: Int) {
 
-        rcReviewer?.setHasFixedSize(true)
-        rcReviewer?.layoutManager = LinearLayoutManager(this)
+            }
 
-        list.add("GOOGLE")
-        list.add("Microsoft")
-        list.add("Aple")
-        list.add("Laptop")
+            override fun onTextChanged(s: CharSequence, start: Int, before: Int, count: Int) {
 
-        val adapter = AdapterReviewer(list, this)
+            }
 
-        rcReviewer?.adapter = adapter
+            override fun afterTextChanged(s: Editable) {
+                okBtnR?.isEnabled = mRejectionNote?.text?.length ?: 0 > 0
+            }
+        })
 
-        fabSign.setOnClickListener {
-            Log.e("Show", "Dialog")
+        fabApprove.setOnClickListener {
             mDialogL?.show()
             if (fabExpanded == true) {
                 closeSubMenusFab()
@@ -511,10 +707,269 @@ class ActDocumentViewer : ActBase(),
                 openSubMenusFab()
             }
         }
+    }
+
+    private fun publishContract(publish: Int) {
+        val body = HashMap<String, String>()
+        body["publish"] = publish.toString()
+        body["id_contract"] = mContractId.toString()
+
+        val gson = GsonBuilder().setLenient().create()
+        val interceptor = HttpLoggingInterceptor()
+        interceptor.level = HttpLoggingInterceptor.Level.BODY
+
+        val okHttpClient = OkHttpClient.Builder()
+            .connectTimeout(100, TimeUnit.SECONDS)
+            .writeTimeout(100, TimeUnit.SECONDS)
+            .readTimeout(100, TimeUnit.SECONDS)
+            .build()
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl(RetrofitApi.JSON_SENDER1)
+            .addConverterFactory(
+                GsonConverterFactory.create(gson)
+            )
+            .client(okHttpClient)
+        val api = retrofit.build().create(RetrofitApi::class.java)
+
+        val call = api.publishContract(
+            body,
+            "application/json"
+        )
+
+        call.enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                val result = response.body()
+                val message = result?.string()
+
+                if (message?.contains("Success")!!) {
+                    dialogSuccess("Document has been published", 3)
+                } else {
+                    dialogFailed("Error occured, the document has been failed to publish")
+                }
+
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                dialogFailed("Error occured, " + t.message.toString())
+            }
+        })
+
+    }
+
+    private fun getReviewer() {
+        var roleReviewer = 0
+
+        //role user  37 = MGR Finance, 38 = MGR Legal, 19 = MGR HSSE
+        //role user  39 = Staff Finance, 40 = Staff Legal, 33 = Staff HSSE
+        if (mUserRole == 37) {
+            roleReviewer = 39
+        } else if (mUserRole == 38) {
+            roleReviewer = 40
+        } else if (mUserRole == 19) {
+            roleReviewer = 33
+        } else if (mUserRole == 8) {
+            roleReviewer = 22
+        } else if (mUserRole == 9) {
+            roleReviewer = 23
+        } else if (mUserRole == 10) {
+            roleReviewer = 24
+        } else if (mUserRole == 11) {
+            roleReviewer = 25
+        } else if (mUserRole == 12) {
+            roleReviewer = 26
+        } else if (mUserRole == 13) {
+            roleReviewer = 27
+        } else if (mUserRole == 14) {
+            roleReviewer = 28
+        } else if (mUserRole == 15) {
+            roleReviewer = 29
+        } else if (mUserRole == 16) {
+            roleReviewer = 30
+        } else if (mUserRole == 17) {
+            roleReviewer = 31
+        } else if (mUserRole == 18) {
+            roleReviewer = 32
+        } else if (mUserRole == 20) {
+            roleReviewer = 34
+        } else if (mUserRole == 21) {
+            roleReviewer = 35
+        }
+
+        val body = HashMap<String, String>()
+        body["role_user"] = roleReviewer.toString()
+        body["id_contract"] = mContractId.toString()
+
+        val gson = GsonBuilder().setLenient().create()
+        val interceptor = HttpLoggingInterceptor()
+        interceptor.level = HttpLoggingInterceptor.Level.BODY
+
+        val okHttpClient = OkHttpClient.Builder()
+            .connectTimeout(100, TimeUnit.SECONDS)
+            .writeTimeout(100, TimeUnit.SECONDS)
+            .readTimeout(100, TimeUnit.SECONDS)
+            .build()
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl(RetrofitApi.JSON_SENDER2)
+            .addConverterFactory(
+                GsonConverterFactory.create(gson)
+            )
+            .client(okHttpClient)
+        val api = retrofit.build().create(RetrofitApi::class.java)
+
+        val call = api.getReviewer(
+            body,
+            "application/json"
+        )
+
+        call.enqueue(object : Callback<ArrayList<ModelReviewer>> {
+            override fun onResponse(
+                call: Call<ArrayList<ModelReviewer>>,
+                response: Response<ArrayList<ModelReviewer>>
+            ) {
+                val result = response.body()
+
+                Log.e("Result 1", result?.toString());
+                if (result == null || result?.toString().equals("[]") || result.isEmpty()) {
+                    setDataReviewerNull(resources.getString(R.string.belum_ada_data_reviewer_staff))
+                } else {
+                    setDataReviewer(result)
+                }
+
+            }
+
+            override fun onFailure(call: Call<ArrayList<ModelReviewer>>, t: Throwable) {
+                Log.e("Result 2", t.toString());
+                setDataReviewerNull(t.message.toString())
+            }
+        })
+    }
+
+    private fun cekContractReviewer() {
+        var jenisMgr = ""
+
+        //role user  37 = MGR Finance, 38 = MGR Legal, 19 = MGR HSSE
+        //role user  39 = Staff Finance, 40 = Staff Legal, 33 = Staff HSSE
+        if (mUserRole == 37) {
+            jenisMgr = "FINANCE_ID"
+        } else if (mUserRole == 38) {
+            jenisMgr = "LEGAL_ID"
+        } else if (mUserRole == 19) {
+            jenisMgr = "HSSE_ID"
+        } else if ((mUserRole >= 8) && (mUserRole <= 18) or (mUserRole == 20) or (mUserRole == 21)) {
+            jenisMgr = "REVIEWER_ID"
+        }
+
+        val body = HashMap<String, String>()
+        body["jenis_mgr"] = jenisMgr
+        body["id_contract"] = mContractId.toString()
+
+        val gson = GsonBuilder().setLenient().create()
+        val interceptor = HttpLoggingInterceptor()
+        interceptor.level = HttpLoggingInterceptor.Level.BODY
+
+        val okHttpClient = OkHttpClient.Builder()
+            .connectTimeout(100, TimeUnit.SECONDS)
+            .writeTimeout(100, TimeUnit.SECONDS)
+            .readTimeout(100, TimeUnit.SECONDS)
+            .build()
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl(RetrofitApi.JSON_SENDER2)
+            .addConverterFactory(
+                GsonConverterFactory.create(gson)
+            )
+            .client(okHttpClient)
+        val api = retrofit.build().create(RetrofitApi::class.java)
+
+        val call = api.cekContractReviewer(
+            body,
+            "application/json"
+        )
+
+        call.enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                val result = response.body()
+                val message = result?.string()
+
+                if (message?.contains("Choose Reviewer")!!) {
+                    InitChooseViewer(resources.getString(R.string.choose_viewer))
+                } else {
+                    InitChooseViewer(resources.getString(R.string.already_verified))
+                }
+
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                setDataReviewerNull(t.message.toString())
+            }
+        })
+    }
+
+    private fun setDataReviewerNull(message: String) {
+        mDialogL?.setContentView(R.layout.dialog_choose_reviewer)
+        val cancelBtn = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_cancel)
+        val textNone = mDialogL?.findViewById<TextView>(R.id.textNone)
+
+        textNone?.text = message
+        textNone?.visibility = View.VISIBLE
+        cancelBtn?.setOnClickListener {
+            mSignPad?.clear()
+            mDialogL?.dismiss()
+        }
+
+        fabSign.setOnClickListener {
+            mDialogL?.show()
+            if (fabExpanded == true) {
+                closeSubMenusFab()
+            } else {
+                openSubMenusFab()
+            }
+        }
+    }
+
+    private fun setDataReviewer(result: ArrayList<ModelReviewer>) {
+        mDialogL?.setContentView(R.layout.dialog_choose_reviewer)
+        val cancelBtn = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_cancel)
+
 
         cancelBtn?.setOnClickListener {
             mSignPad?.clear()
             mDialogL?.dismiss()
+
+        }
+
+        val rcReviewer = mDialogL?.findViewById<RecyclerView>(R.id.rcReviewer)
+
+        rcReviewer?.setHasFixedSize(true)
+        rcReviewer?.layoutManager = LinearLayoutManager(this)
+
+        val adapter = mDialogL?.let { AdapterReviewer(result, this, mUserRole, it, this) }
+
+        rcReviewer?.adapter = adapter
+
+        fabSign.setOnClickListener {
+            mDialogL?.show()
+            if (fabExpanded == true) {
+                closeSubMenusFab()
+            } else {
+                openSubMenusFab()
+            }
+        }
+    }
+
+    private fun InitChooseViewer(msg: String) {
+        layoutFabApprove.visibility = View.GONE
+        layoutFabReject.visibility = View.GONE
+        layoutFabSign.visibility = View.VISIBLE
+
+        tvSign.text = msg
+        if (!this.isFinishing)
+            GlideApp.with(this@ActDocumentViewer).load(R.drawable.ic_check2_white).into(fabSign)
+
+        if (msg?.equals("Choose Reviewer")) {
+            getReviewer()
         }
     }
 
@@ -535,39 +990,44 @@ class ActDocumentViewer : ActBase(),
         body["user_status"] = currentStatus.toString()
         body["note"] = note
 
+        Log.e("Body change status", body.toString())
         disposable = service.setReadStatus(body)
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .doOnSubscribe {
-                    if (useLoading) onLoading()
-                }
-                .subscribe(
-                        { result ->
-                            if (useLoading) onComplete()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .doOnSubscribe {
+                if (useLoading) onLoading()
+            }
+            .subscribe(
+                { result ->
+                    if (useLoading) onComplete()
 
-                            val obj = JSONObject(result.string())
-                            val response = obj.getInt("response")
-                            if (response == 1) {
-                                mContractStatus = currentStatus
-                                when (currentStatus) {
-                                    2 -> dialogSuccess("Document has been rejected", currentStatus)
-                                    3 -> dialogSuccess("Document has been approved", currentStatus)
-                                }
-                            }
-
-                            /*  if (refreshAfterFinish) {
-
-                              }*/
-                        },
-                        { error ->
-                            onComplete()
-                            when (currentStatus) {
-                                2 -> dialogFailed("Error occured, the document has been failed to reject")
-                                3 -> dialogFailed("Error occured, the document has been failed to approve")
-                            }
-                            Log.d(TAG, "Change Status Error" + error.message)
+                    val obj = JSONObject(result.string())
+                    val response = obj.getInt("response")
+                    if (response == 1) {
+                        mContractStatus = currentStatus
+                        when (currentStatus) {
+                            2 -> dialogSuccess("Document has been rejected", currentStatus)
+                            3 -> dialogSuccess("Document has been approved", currentStatus)
+                            4 -> dialogSuccess("Document has been rejected", currentStatus)
+                            5 -> dialogSuccess("Document has been approved", currentStatus)
                         }
-                )
+                    }
+
+                    /*  if (refreshAfterFinish) {
+
+                      }*/
+                },
+                { error ->
+                    onComplete()
+                    when (currentStatus) {
+                        2 -> dialogFailed("Error occured, the document has been failed to reject")
+                        3 -> dialogFailed("Error occured, the document has been failed to approve")
+                        4 -> dialogFailed("Error occured, the document has been failed to reject")
+                        5 -> dialogFailed("Error occured, the document has been failed to approve")
+                    }
+                    Log.d(TAG, "Change Status Error" + error.message)
+                }
+            )
     }
 
     fun dialogSuccess(teks: String, currentStatus: Int) {
@@ -598,7 +1058,7 @@ class ActDocumentViewer : ActBase(),
         btOk?.setOnClickListener {
             dialog?.dismiss()
 
-            if (currentStatus == 2 || currentStatus == 3) {
+            if (currentStatus == 2 || currentStatus == 3 || currentStatus == 4 || currentStatus == 5) {
                 val intent = intent
                 finish()
                 intent.putExtra("DOC_STATUS", currentStatus)
@@ -620,8 +1080,6 @@ class ActDocumentViewer : ActBase(),
         recycler?.isNestedScrollingEnabled = false
         adapter = listPdf?.let { it1 -> AdapterExtra(this, it1, this) }
         recycler?.adapter = adapter
-
-        Log.d("bayao", listPdf?.size.toString())
 
         dialog?.show()
     }
@@ -673,30 +1131,42 @@ class ActDocumentViewer : ActBase(),
 
     //download pdf setelah semua ter approve
     private fun checkPDF() {
-        val pdfFile = File(Environment.getExternalStorageDirectory().absolutePath + "/Digital Contract/"
-                + mContractId.toString() + "_" + mDocTitle + ".pdf")
+        val pdfFile = File(
+            Environment.getExternalStorageDirectory().absolutePath + "/Digital Contract/"
+                    + mContractId.toString() + "_" + mDocTitle + ".pdf"
+        )
 
 //        if(pdfFile.exists())
         checkPermission()
     }
 
     private fun checkPermission() {
-        if (ContextCompat.checkSelfPermission(this,
-                        Manifest.permission.WRITE_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE
+            )
+            != PackageManager.PERMISSION_GRANTED
+        ) {
 
-            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
-                    KEY_PERMISSION_WRITE_EX)
+            ActivityCompat.requestPermissions(
+                this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                KEY_PERMISSION_WRITE_EX
+            )
         } else downloadPDF()
     }
 
     private fun downloadPDF() {
-        var content = Config.BASE_URL + "export_signed/" + mContractId.toString() + "_" + mDocPath + "_final.pdf"
+        var content =
+            Config.BASE_URL + "export_signed/" + mContractId.toString() + "_" + mDocPath + "_final.pdf"
 //        content = "https://drive.google.com/viewerng/viewer?embedded=true&url=$content"
         DownloadFile().execute(content, mContractId.toString() + "_" + mDocPath + "_final.pdf")
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         when (requestCode) {
             KEY_PERMISSION_WRITE_EX -> {
                 if (grantResults.size > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
@@ -745,16 +1215,20 @@ class ActDocumentViewer : ActBase(),
 //    }
 
     open fun viewPDF() {
-        val pdfFile = File(Environment.getExternalStorageDirectory().absolutePath + "/Digital Contract/"
-                + mContractId.toString() + "_" + mDocPath + "_final.pdf")
+        val pdfFile = File(
+            Environment.getExternalStorageDirectory().absolutePath + "/Digital Contract/"
+                    + mContractId.toString() + "_" + mDocPath + "_final.pdf"
+        )
 
         if (pdfFile.exists()) {
             val pdfIntent = Intent(Intent.ACTION_VIEW)
             pdfIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
 
-            val apkURI = FileProvider.getUriForFile(this,
-                    this.applicationContext
-                            .packageName + ".provider", pdfFile)
+            val apkURI = FileProvider.getUriForFile(
+                this,
+                this.applicationContext
+                    .packageName + ".provider", pdfFile
+            )
             pdfIntent.setDataAndType(apkURI, "application/pdf")
             pdfIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             try {
@@ -816,7 +1290,8 @@ class ActDocumentViewer : ActBase(),
         }
 
         try {
-            keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEY_STORE)
+            keyGenerator =
+                KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, ANDROID_KEY_STORE)
         } catch (e: Exception) {
             when (e) {
                 is NoSuchAlgorithmException,
@@ -834,7 +1309,8 @@ class ActDocumentViewer : ActBase(),
         val defaultCipher: Cipher
         val cipherNotInvalidated: Cipher
         try {
-            val cipherString = "${KeyProperties.KEY_ALGORITHM_AES}/${KeyProperties.BLOCK_MODE_CBC}/${KeyProperties.ENCRYPTION_PADDING_PKCS7}"
+            val cipherString =
+                "${KeyProperties.KEY_ALGORITHM_AES}/${KeyProperties.BLOCK_MODE_CBC}/${KeyProperties.ENCRYPTION_PADDING_PKCS7}"
             defaultCipher = Cipher.getInstance(cipherString)
             cipherNotInvalidated = Cipher.getInstance(cipherString)
         } catch (e: Exception) {
@@ -905,7 +1381,7 @@ class ActDocumentViewer : ActBase(),
         }
     }
 
-    private fun sendSign(){
+    private fun sendSign() {
         onLoading()
         postSignDoc()
 
@@ -962,43 +1438,41 @@ class ActDocumentViewer : ActBase(),
             .build()
 
         val retrofit = Retrofit.Builder()
-            .baseUrl(RetrofitApi.SIGN_DOC_JSON_SENDER2)
+            .baseUrl(RetrofitApi.JSON_SENDER2)
             .addConverterFactory(
                 GsonConverterFactory.create(gson)
             )
             .client(okHttpClient)
         val api = retrofit.build().create(RetrofitApi::class.java)
 
-//        val url = "Json_sender2/get_token?id_user=" + mUserId.toString() + "&id_contract=" + mContractId.toString() + "&passphrase=" + passPhrase + "&contract_title=" + mDocTitle + "&contract_path=" + mDocPath
-
-        val call = api.signDoc(body,
-            "application/json")
+        val call = api.signDoc(
+            body,
+            "application/json"
+        )
 
         call.enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 val result = response.body()?.string()
 
-                if (result == null){
+                if (result == null) {
                     dialogFailed("Error occured, the document has been failed to signed")
-                }
-                else{
-                    if (result.contains("Passphrase anda salah")){
+                } else {
+                    if (result.contains("Passphrase anda salah")) {
                         dialogFailed("Passphrase anda salah")
-                    }
-                    else if(result.contains("response")){
-                        if (result.contains("1")){
-                            dialogSuccess("Sign Success, the document has been success to signed",3)
-                        }
-                        else{
+                    } else if (result.contains("response")) {
+                        if (result.contains("1")) {
+                            dialogSuccess(
+                                "Sign Success, the document has been success to signed",
+                                3
+                            )
+                        } else {
                             dialogFailed(result)
                         }
-                    }
-                    else{
+                    } else {
                         dialogFailed(result)
                     }
                 }
                 onComplete()
-                Log.e("Result", result);
 
             }
 
@@ -1021,8 +1495,10 @@ class ActDocumentViewer : ActBase(),
             when (e) {
                 is BadPaddingException,
                 is IllegalBlockSizeException -> {
-                    Toast.makeText(this, "Failed to encrypt the data with the generated key. "
-                            + "Retry the purchase", Toast.LENGTH_LONG).show()
+                    Toast.makeText(
+                        this, "Failed to encrypt the data with the generated key. "
+                                + "Retry the purchase", Toast.LENGTH_LONG
+                    ).show()
                     Log.e(TAG, "Failed to encrypt the data with the generated key. ${e.message}")
                 }
                 else -> throw e
@@ -1049,9 +1525,9 @@ class ActDocumentViewer : ActBase(),
 
             val keyProperties = KeyProperties.PURPOSE_ENCRYPT or KeyProperties.PURPOSE_DECRYPT
             val builder = KeyGenParameterSpec.Builder(keyName, keyProperties)
-                    .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
-                    .setUserAuthenticationRequired(true)
-                    .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
+                .setBlockModes(KeyProperties.BLOCK_MODE_CBC)
+                .setUserAuthenticationRequired(true)
+                .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_PKCS7)
 //                .setInvalidatedByBiometricEnrollment(invalidatedByBiometricEnrollment)
 
             keyGenerator.run {

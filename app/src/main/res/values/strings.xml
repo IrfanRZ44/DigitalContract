@@ -11,10 +11,12 @@
 
 
     <string name="approve_confirm">Are you sure you have checked all details and continue to approve document?</string>
+    <string name="approve_publish">Are you sure want to publish document?</string>
 
     <string name="approve_yes">Yes</string>
     <string name="sign_yes">Sign</string>
     <string name="choose_viewer">Choose Reviewer</string>
+    <string name="already_verified">Reviewed</string>
     <string name="dialog_cancel">Cancel</string>
 
     <string name="reject_confirm">Are you sure you have checked all details and continue to approve document?</string>
@@ -37,6 +39,9 @@
     <string name="fa_bookmark">&#xf02e;</string>
     <string name="fa_warning">&#xf071;</string>
     <string name="fa_info_circle">&#xf05a;</string>
+    <string name="fa_share">&#xf064;</string>
+    <string name="fa_pencil">&#xf044;</string>
+    <string name="fa_unlike">&#xf165;</string>
 
     <string name="drawer_open">Open navigation drawer</string>
     <string name="drawer_close">Close navigation drawer</string>
@@ -76,5 +81,6 @@
     <string name="notif_title">Digital Contract</string>
     <string name="channel_name">Digital Contract</string>
     <string name="next">Next</string>
+    <string name="belum_ada_data_reviewer_staff">Belum ada data reviewer / staff</string>
 
 </resources>
