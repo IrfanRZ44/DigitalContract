@@ -43,20 +43,20 @@ import java.util.HashMap
 import java.util.concurrent.TimeUnit
 
 
-class AdapterReviewer(
+class AdapterReviewer2(
     private val list: ArrayList<ModelReviewer>,
     private val context: Context,
     private val roleUser: Int,
     private val dialog: Dialog,
     private val activity: Activity
 ) :
-    RecyclerView.Adapter<AdapterReviewer.ViewHolder>() {
+    RecyclerView.Adapter<AdapterReviewer2.ViewHolder>() {
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.bindItem(context, list[position], position, roleUser, dialog, activity)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        return AdapterReviewer.ViewHolder(
+        return AdapterReviewer2.ViewHolder(
             LayoutInflater.from(context).inflate(
                 R.layout.list_reviewer,
                 parent,
@@ -78,7 +78,6 @@ class AdapterReviewer(
 
             rbReviewer.setOnClickListener(View.OnClickListener { v ->
 
-//                Log.e("Data", reviewer.userId + "  " +reviewer.username)
                 sendReviewer(reviewer, context, roleUser, dialog, activity)
             })
         }
@@ -101,7 +100,7 @@ class AdapterReviewer(
             } else if (roleUser == 19) {
                 jenisMgr = "HSSE_ID"
             } else if ((roleUser >= 8) && (roleUser <= 18) or (roleUser == 20) or (roleUser == 21)){
-                jenisMgr = "REVIEWER_ID"
+                jenisMgr = "REVIEWER_ID_2"
             }
 
             val body = HashMap<String, String>()
@@ -141,10 +140,10 @@ class AdapterReviewer(
                     progressDialog.dismiss()
 
                     if (message?.contains("Success")!!){
-                        dialogSuccess("Berhasil memilih reviewer", dialog, context, activity)
+                        dialogSuccess("Berhasil memilih reviewer 2", dialog, context, activity)
                     }
                     else{
-                        dialogFailed("Gagal memilih reviewer", dialog, context)
+                        dialogFailed("Gagal memilih reviewer 2", dialog, context)
                     }
                 }
 
@@ -182,7 +181,8 @@ class AdapterReviewer(
             tvTitle?.text = "Success"
             tvDeskripsi?.text = teks
             btOk?.setOnClickListener {
-                activity.tvSign.text = activity.resources.getString(R.string.already_verified)
+                activity.tvApprove.text = activity.resources.getString(R.string.already_verified) + " 2"
+
                 val i = Intent(activity, ActDocumentViewer::class.java)
                 val mDocTitle = activity.intent.getStringExtra("DOC_TITLE")
                 val mDocPath = activity.intent.getStringExtra("DOC_PATH")
@@ -203,6 +203,7 @@ class AdapterReviewer(
                 dialog?.dismiss()
                 activity.finish()
 
+                dialog?.dismiss()
             }
             dialog?.show()
         }

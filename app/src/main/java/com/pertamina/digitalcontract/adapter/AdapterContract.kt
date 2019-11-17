@@ -96,9 +96,9 @@ class AdapterContract(
 
                 if (statusOfficer == "") {
                     myStatus = 0
-                } else if (statusVendor == "5"){
+                } else if (statusVendor == "5") {
                     myStatus = 3
-                } else{
+                } else {
                     myStatus = Integer.parseInt(statusOfficer)
                 }
                 Log.e("officer ", statusOfficer + "saya null")
@@ -108,10 +108,9 @@ class AdapterContract(
                 val statusVendor = items.VENDOR_CERTIFICATE
                 if (statusVendor == "") {
                     myStatus = 0
-                } else if (statusVendor == "3"){
+                } else if (statusVendor == "3") {
                     myStatus = 0
-                }
-                else if (statusVendor == "5"){
+                } else if (statusVendor == "5") {
                     myStatus = 3;
                 }
             } else if (mUserRole == UserRole.Mgr_Finance) {
@@ -164,202 +163,211 @@ class AdapterContract(
                 or (mUserRole == UserRole.Mgr_S_dan_D_Region_VII) or (mUserRole == UserRole.Mgr_Assets_Management_MOR_VII)
                 or (mUserRole == UserRole.Mgr_Medical_Sulawesi)
             ) {
-                if ((items?.REVIEWER_ID == "") or (items?.REVIEWER_ID == "0")) {
+                if (((items?.REVIEWER_ID == "") or (items?.REVIEWER_ID == "0")) && ((items?.REVIEWER_ID_2 == "") or (items?.REVIEWER_ID_2 == "0"))) {
                     myStatus = 0
                 } else {
-                    if (items?.REVIEWER_STATUS == "3") {
-                        myStatus = 6
-                    } else if (items?.REVIEWER_STATUS == "4") {
-                        myStatus = 4
-                    } else if (items?.REVIEWER_STATUS == "5") {
-                        myStatus = 5
+                        if (items?.REVIEWER_STATUS == "3" || items?.REVIEWER_STATUS_2 == "3") {
+                            myStatus = 6
+                        } else if ((items?.REVIEWER_STATUS == "4") || (items?.REVIEWER_STATUS_2 == "4")) {
+                            myStatus = 4
+                        } else if ((items?.REVIEWER_STATUS == "5") || (items?.REVIEWER_STATUS_2 == "5")) {
+                            myStatus = 5
+                        } else {
+                            myStatus = 7
+                        }
+                    }
+                } else if (mUserRole == UserRole.Reviewer_Vendor) {
+                    if (items?.VENDOR_CERTIFICATE == "") {
+                        myStatus = 0
                     } else {
-                        myStatus = 7
+                        myStatus = Integer.parseInt(items?.VENDOR_CERTIFICATE)
+                    }
+                } else if (mUserRole == UserRole.Staf_Finance) {
+                    if (items?.FINANCE_STATUS == "") {
+                        myStatus = 0
+                    } else {
+                        myStatus = Integer.parseInt(items?.FINANCE_STATUS)
+                    }
+                } else if (mUserRole == UserRole.Staf_HSSE_MOR_VII) {
+                    if (items?.HSSE_STATUS == "") {
+                        myStatus = 0
+                    } else {
+                        myStatus = Integer.parseInt(items?.HSSE_STATUS)
+                    }
+                } else if (mUserRole == UserRole.Staf_Legal) {
+                    if (items?.LEGAL_STATUS == "") {
+                        myStatus = 0
+                    } else {
+                        myStatus = Integer.parseInt(items?.LEGAL_STATUS)
+                    }
+                } else if ((mUserRole == UserRole.Staf_HC) or (mUserRole == UserRole.Staf_TSR_VII)
+                or(mUserRole == UserRole.Staf_Industri_Marine) or (mUserRole == UserRole.Staf_Retail)
+                or(mUserRole == UserRole.Staf_QM) or (mUserRole == UserRole.Staf_Internal_Audit)
+                or(mUserRole == UserRole.Staf_IT_MOR_VII) or (mUserRole == UserRole.Staf_Marine_Region_VII)
+                or(mUserRole == UserRole.Staf_Domgas_Region_VII) or (mUserRole == UserRole.Staf_Avigation_Region_VII)
+                or(mUserRole == UserRole.Staf_S_dan_D_Region_VII) or (mUserRole == UserRole.Staf_Asset_Management_MOR_VII)
+                or(mUserRole == UserRole.Staf_Medical_Sulawesi)
+                ) {
+
+                    if (items?.REVIEWER_STATUS == "") {
+                        myStatus = 0
+                    } else {
+                        myStatus = Integer.parseInt(items?.REVIEWER_STATUS)
+                    }
+                } else if (mUserRole == UserRole.Mgr_Procurement) {
+                    if (items.PUBLISHED == "1") {
+                        myStatus = 3
+                    } else {
+                        myStatus = Integer.parseInt(items.PUBLISHED)
                     }
                 }
-            } else if (mUserRole == UserRole.Reviewer_Vendor) {
-                if (items?.VENDOR_CERTIFICATE == "") {
-                    myStatus = 0
-                } else {
-                    myStatus = Integer.parseInt(items?.VENDOR_CERTIFICATE)
+
+                tvStatus2.visibility = View.GONE
+                when (myStatus) {
+                    7 //already disposisi or reviewed by manager
+                    -> {
+                        tvStatus.setText(R.string.fa_share)
+                        tvStatus.setTextColor(
+                            ResourcesCompat.getColor(
+                                itemView.resources,
+                                R.color.cpb_blue_dark,
+                                null
+                            )
+                        )
+                        viewColor.background =
+                            ResourcesCompat.getDrawable(
+                                itemView.resources,
+                                R.color.cpb_blue_dark,
+                                null
+                            )
+                    }
+                    6 //already aprove by staff
+                    -> {
+                        tvStatus.setText(R.string.fa_check)
+                        tvStatus.setTextColor(
+                            ResourcesCompat.getColor(
+                                itemView.resources,
+                                R.color.cpb_green_dark,
+                                null
+                            )
+                        )
+                        viewColor.background = ResourcesCompat.getDrawable(
+                            itemView.resources,
+                            R.color.cpb_green_dark,
+                            null
+                        )
+                    }
+                    5 //already aproved by manager
+                    -> {
+                        tvStatus2.setText(R.string.fa_check)
+                        tvStatus2.setTextColor(
+                            ResourcesCompat.getColor(
+                                itemView.resources,
+                                R.color.cpb_green_dark,
+                                null
+                            )
+                        )
+                        tvStatus2.visibility = View.VISIBLE
+                        tvStatus.setText(R.string.fa_check)
+                        tvStatus.setTextColor(
+                            ResourcesCompat.getColor(
+                                itemView.resources,
+                                R.color.cpb_green_dark,
+                                null
+                            )
+                        )
+                        viewColor.background = ResourcesCompat.getDrawable(
+                            itemView.resources,
+                            R.color.cpb_green_dark,
+                            null
+                        )
+                    }
+                    4 //reject
+                    -> {
+                        tvStatus.setText(R.string.fa_unlike)
+                        tvStatus.setTextColor(
+                            ResourcesCompat.getColor(
+                                itemView.resources,
+                                R.color.redSoft,
+                                null
+                            )
+                        )
+                        viewColor.background =
+                            ResourcesCompat.getDrawable(itemView.resources, R.color.redSoft, null)
+                    }
+                    3 //approved staff
+                    -> {
+                        tvStatus.setText(R.string.fa_check)
+                        tvStatus.setTextColor(
+                            ResourcesCompat.getColor(
+                                itemView.resources,
+                                R.color.cpb_green_dark,
+                                null
+                            )
+                        )
+                        viewColor.background = ResourcesCompat.getDrawable(
+                            itemView.resources,
+                            R.color.cpb_green_dark,
+                            null
+                        )
+                    }
+                    2 //reject
+                    -> {
+                        tvStatus.setText(R.string.fa_times)
+                        tvStatus.setTextColor(
+                            ResourcesCompat.getColor(
+                                itemView.resources,
+                                R.color.redSoft,
+                                null
+                            )
+                        )
+                        viewColor.background =
+                            ResourcesCompat.getDrawable(itemView.resources, R.color.redSoft, null)
+                    }
+                    else //pending
+                    -> {
+                        tvStatus.setText(R.string.fa_pending)
+                        tvStatus.setTextColor(
+                            ResourcesCompat.getColor(
+                                itemView.resources,
+                                R.color.material_grey_600,
+                                null
+                            )
+                        )
+                        viewColor.background =
+                            ResourcesCompat.getDrawable(itemView.resources, R.color.blue, null)
+                    }
                 }
-            } else if (mUserRole == UserRole.Staf_Finance) {
-                if (items?.FINANCE_STATUS == "") {
-                    myStatus = 0
-                } else {
-                    myStatus = Integer.parseInt(items?.FINANCE_STATUS)
+
+                //read
+                if (myStatus > 0) {
+                    CalligraphyUtils.applyFontToTextView(
+                        context,
+                        tvTitle,
+                        "fonts/Montserrat-Regular.ttf"
+                    )
                 }
-            } else if (mUserRole == UserRole.Staf_HSSE_MOR_VII) {
-                if (items?.HSSE_STATUS == "") {
-                    myStatus = 0
-                } else {
-                    myStatus = Integer.parseInt(items?.HSSE_STATUS)
+                //unread
+                else {
+                    CalligraphyUtils.applyFontToTextView(
+                        context,
+                        tvTitle,
+                        "fonts/Montserrat-Bold.ttf"
+                    )
                 }
-            } else if (mUserRole == UserRole.Staf_Legal) {
-                if (items?.LEGAL_STATUS == "") {
-                    myStatus = 0
-                } else {
-                    myStatus = Integer.parseInt(items?.LEGAL_STATUS)
-                }
-            } else if ((mUserRole == UserRole.Staf_HC) or (mUserRole == UserRole.Staf_TSR_VII)
-                or (mUserRole == UserRole.Staf_Industri_Marine) or (mUserRole == UserRole.Staf_Retail)
-                or (mUserRole == UserRole.Staf_QM) or (mUserRole == UserRole.Staf_Internal_Audit)
-                or (mUserRole == UserRole.Staf_IT_MOR_VII) or (mUserRole == UserRole.Staf_Marine_Region_VII)
-                or (mUserRole == UserRole.Staf_Domgas_Region_VII) or (mUserRole == UserRole.Staf_Avigation_Region_VII)
-                or (mUserRole == UserRole.Staf_S_dan_D_Region_VII) or (mUserRole == UserRole.Staf_Asset_Management_MOR_VII)
-                or (mUserRole == UserRole.Staf_Medical_Sulawesi)
-            ) {
-                if (items?.REVIEWER_STATUS == "") {
-                    myStatus = 0
-                } else {
-                    myStatus = Integer.parseInt(items?.REVIEWER_STATUS)
-                }
-            } else if (mUserRole == UserRole.Mgr_Procurement) {
-                if (items.PUBLISHED == "1") {
-                    myStatus = 3
-                } else {
-                    myStatus = Integer.parseInt(items.PUBLISHED)
-                }
+
+                containerView.setOnClickListener { listener(items, position, myStatus) }
             }
 
-            tvStatus2.visibility = View.GONE
-            when (myStatus) {
-                7 //already disposisi or reviewed by manager
-                -> {
-                    tvStatus.setText(R.string.fa_share)
-                    tvStatus.setTextColor(
-                        ResourcesCompat.getColor(
-                            itemView.resources,
-                            R.color.cpb_blue_dark,
-                            null
-                        )
-                    )
-                    viewColor.background =
-                        ResourcesCompat.getDrawable(itemView.resources, R.color.cpb_blue_dark, null)
-                }
-                6 //already aprove by staff
-                -> {
-                    tvStatus.setText(R.string.fa_check)
-                    tvStatus.setTextColor(
-                        ResourcesCompat.getColor(
-                            itemView.resources,
-                            R.color.cpb_green_dark,
-                            null
-                        )
-                    )
-                    viewColor.background = ResourcesCompat.getDrawable(
-                        itemView.resources,
-                        R.color.cpb_green_dark,
-                        null
-                    )
-                }
-                5 //already aproved by manager
-                -> {
-                    tvStatus2.setText(R.string.fa_check)
-                    tvStatus2.setTextColor(
-                        ResourcesCompat.getColor(
-                            itemView.resources,
-                            R.color.cpb_green_dark,
-                            null
-                        )
-                    )
-                    tvStatus2.visibility = View.VISIBLE
-                    tvStatus.setText(R.string.fa_check)
-                    tvStatus.setTextColor(
-                        ResourcesCompat.getColor(
-                            itemView.resources,
-                            R.color.cpb_green_dark,
-                            null
-                        )
-                    )
-                    viewColor.background = ResourcesCompat.getDrawable(
-                        itemView.resources,
-                        R.color.cpb_green_dark,
-                        null
-                    )
-                }
-                4 //reject
-                -> {
-                    tvStatus.setText(R.string.fa_unlike)
-                    tvStatus.setTextColor(
-                        ResourcesCompat.getColor(
-                            itemView.resources,
-                            R.color.redSoft,
-                            null
-                        )
-                    )
-                    viewColor.background =
-                        ResourcesCompat.getDrawable(itemView.resources, R.color.redSoft, null)
-                }
-                3 //approved staff
-                -> {
-                    tvStatus.setText(R.string.fa_check)
-                    tvStatus.setTextColor(
-                        ResourcesCompat.getColor(
-                            itemView.resources,
-                            R.color.cpb_green_dark,
-                            null
-                        )
-                    )
-                    viewColor.background = ResourcesCompat.getDrawable(
-                        itemView.resources,
-                        R.color.cpb_green_dark,
-                        null
-                    )
-                }
-                2 //reject
-                -> {
-                    tvStatus.setText(R.string.fa_times)
-                    tvStatus.setTextColor(
-                        ResourcesCompat.getColor(
-                            itemView.resources,
-                            R.color.redSoft,
-                            null
-                        )
-                    )
-                    viewColor.background =
-                        ResourcesCompat.getDrawable(itemView.resources, R.color.redSoft, null)
-                }
-                else //pending
-                -> {
-                    tvStatus.setText(R.string.fa_pending)
-                    tvStatus.setTextColor(
-                        ResourcesCompat.getColor(
-                            itemView.resources,
-                            R.color.material_grey_600,
-                            null
-                        )
-                    )
-                    viewColor.background =
-                        ResourcesCompat.getDrawable(itemView.resources, R.color.blue, null)
-                }
+            fun convertRupiah(angka: Double): String {
+                val localeID = Locale("in", "ID")
+                val formatRupiah = NumberFormat.getCurrencyInstance(localeID)
+                return formatRupiah.format(angka).replace("Rp", "Rp ")
             }
-
-            //read
-            if (myStatus > 0) {
-                CalligraphyUtils.applyFontToTextView(
-                    context,
-                    tvTitle,
-                    "fonts/Montserrat-Regular.ttf"
-                )
-            }
-            //unread
-            else {
-                CalligraphyUtils.applyFontToTextView(context, tvTitle, "fonts/Montserrat-Bold.ttf")
-            }
-
-            containerView.setOnClickListener { listener(items, position, myStatus) }
         }
 
-        fun convertRupiah(angka: Double): String {
-            val localeID = Locale("in", "ID")
-            val formatRupiah = NumberFormat.getCurrencyInstance(localeID)
-            return formatRupiah.format(angka).replace("Rp", "Rp ")
+        fun addItem(dataObj: MutableList<Contract>) {
+            items.addAll(dataObj)
+            notifyDataSetChanged()
         }
     }
-
-    fun addItem(dataObj: MutableList<Contract>) {
-        items.addAll(dataObj)
-        notifyDataSetChanged()
-    }
-}

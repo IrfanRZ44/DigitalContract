@@ -13,6 +13,8 @@ open class Contract {
     open var LEGAL_STATUS : String? = ""
     @field:SerializedName("REVIEWER_STATUS")
     open var REVIEWER_STATUS : String? = ""
+    @field:SerializedName("REVIEWER_STATUS_2")
+    open var REVIEWER_STATUS_2 : String? = ""
     @field:SerializedName("FINANCE_STATUS")
     open var FINANCE_STATUS : String? = ""
     @field:SerializedName("VENDOR_SIGNATURE")
@@ -37,6 +39,8 @@ open class Contract {
     open var FUNGSI_ID : String? = ""
     @field:SerializedName("REVIEWER_ID")
     open var REVIEWER_ID : String? = ""
+    @field:SerializedName("REVIEWER_ID_2")
+    open var REVIEWER_ID_2 : String? = ""
     @field:SerializedName("PUBLISHED")
     open var PUBLISHED : String? = ""
 

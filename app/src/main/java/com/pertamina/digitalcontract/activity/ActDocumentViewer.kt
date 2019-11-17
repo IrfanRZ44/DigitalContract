@@ -37,6 +37,7 @@ import com.pertamina.digitalcontract.rest.RetrofitApi
 import com.pertamina.digitalcontract.adapter.AdapterExtra
 import com.pertamina.digitalcontract.adapter.AdapterLogRejected
 import com.pertamina.digitalcontract.adapter.AdapterReviewer
+import com.pertamina.digitalcontract.adapter.AdapterReviewer2
 import com.pertamina.digitalcontract.fingerprint.FingerprintAuthenticationDialogFragment
 import com.pertamina.digitalcontract.model.ModelLogRejected
 import com.pertamina.digitalcontract.model.ModelReviewer
@@ -358,7 +359,7 @@ class ActDocumentViewer : ActBase(),
                         }
                     } else if (mContractStatus == 5){
                         fabApprove.isEnabled = false
-                        InitApprover("Staff", "Apprrove", 0)
+                        InitApprover("Staff", "Approve", 0)
                     }
                     else {
                         layoutFabApprove.visibility = View.VISIBLE
@@ -398,7 +399,7 @@ class ActDocumentViewer : ActBase(),
         var title = mDocPath
 
         title = URLEncoder.encode(title, "UTF-8")
-        var content = Config.BASE_URL + "export/" + title + ".pdf"
+        var content = Config.BASE_URL + "export/" + mContractId + "_" + title + ".pdf"
         content = "https://drive.google.com/viewerng/viewer?embedded=true&url=$content"
         Log.e("Url doc", content)
 
@@ -407,7 +408,7 @@ class ActDocumentViewer : ActBase(),
 
     //fungsi hanya jika bisa approve
     private fun InitApprover(requestRole: String, requestShowing : String, requestType : Int) {
-        if (requestShowing == "Apprrove"){
+        if (requestShowing == "Approve"){
             layoutFabApprove.visibility = View.VISIBLE
             layoutFabReject.visibility = View.GONE
             tvApprove.text = "Approved"
@@ -757,7 +758,104 @@ class ActDocumentViewer : ActBase(),
 
     }
 
-    private fun getReviewer() {
+    private fun cekContractReviewer() {
+        var jenisMgr = ""
+        var jenisMgr2 = ""
+
+        //role user  37 = MGR Finance, 38 = MGR Legal, 19 = MGR HSSE
+        //role user  39 = Staff Finance, 40 = Staff Legal, 33 = Staff HSSE
+        if (mUserRole == 37) {
+            jenisMgr = "FINANCE_ID"
+        } else if (mUserRole == 38) {
+            jenisMgr = "LEGAL_ID"
+        } else if (mUserRole == 19) {
+            jenisMgr = "HSSE_ID"
+        } else if ((mUserRole >= 8) && (mUserRole <= 18) or (mUserRole == 20) or (mUserRole == 21)) {
+            jenisMgr = "REVIEWER_ID"
+            jenisMgr2 = "REVIEWER_ID_2"
+        }
+
+        val body = HashMap<String, String>()
+        body["jenis_mgr"] = jenisMgr
+        body["jenis_mgr2"] = jenisMgr2
+        body["id_contract"] = mContractId.toString()
+
+        val gson = GsonBuilder().setLenient().create()
+        val interceptor = HttpLoggingInterceptor()
+        interceptor.level = HttpLoggingInterceptor.Level.BODY
+
+        val okHttpClient = OkHttpClient.Builder()
+            .connectTimeout(100, TimeUnit.SECONDS)
+            .writeTimeout(100, TimeUnit.SECONDS)
+            .readTimeout(100, TimeUnit.SECONDS)
+            .build()
+
+        val retrofit = Retrofit.Builder()
+            .baseUrl(RetrofitApi.JSON_SENDER2)
+            .addConverterFactory(
+                GsonConverterFactory.create(gson)
+            )
+            .client(okHttpClient)
+        val api = retrofit.build().create(RetrofitApi::class.java)
+
+        val call = api.cekContractReviewer(
+            body,
+            "application/json"
+        )
+
+        call.enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                val result = response.body()
+                val message = result?.string()
+                val hasil1 = message?.split("___")?.toTypedArray();
+
+                if (hasil1?.get(0)?.contains("0")!!) {
+                    if (!this@ActDocumentViewer.isFinishing)
+                        GlideApp.with(this@ActDocumentViewer).load(R.drawable.ic_playlist_add_white).into(fabSign)
+                    fabSign.isEnabled = true
+                    if (jenisMgr.equals("REVIEWER_ID")) {
+                        InitChooseViewer(resources.getString(R.string.choose_viewer), 1)
+                    }else{
+                        InitChooseViewer(resources.getString(R.string.choose_viewer), 3)
+                    }
+                } else {
+                    if (!this@ActDocumentViewer.isFinishing)
+                        GlideApp.with(this@ActDocumentViewer).load(R.drawable.ic_check2_white).into(fabSign)
+                    fabSign.isEnabled = true
+                    if (jenisMgr.equals("REVIEWER_ID")) {
+                        InitChooseViewer(resources.getString(R.string.already_verified), 1)
+                    }else{
+                        InitChooseViewer(resources.getString(R.string.already_verified), 3)
+                    }
+                }
+
+                if (jenisMgr2.equals("REVIEWER_ID_2")) {
+                    if (hasil1?.get(1)?.contains("0")!!) {
+                        if (!this@ActDocumentViewer.isFinishing)
+                            GlideApp.with(this@ActDocumentViewer).load(R.drawable.ic_playlist_add_white).into(fabApprove)
+                        fabApprove.isEnabled = true;
+                        InitChooseViewer2(resources.getString(R.string.choose_viewer) + " 2")
+                    } else {
+                        if (!this@ActDocumentViewer.isFinishing)
+                            GlideApp.with(this@ActDocumentViewer).load(R.drawable.ic_check2_white).into(fabApprove)
+                        fabApprove.isEnabled = true;
+                        InitChooseViewer2(resources.getString(R.string.already_verified) + " 2")
+                    }
+                }
+
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                if (jenisMgr.equals("REVIEWER_ID")) {
+                    setDataReviewerNull(t.message.toString(), 1)
+                }else{
+                    setDataReviewerNull(t.message.toString(), 3)
+                }
+            }
+        })
+    }
+
+    private fun getReviewer(requestReviewer : Int) {
         var roleReviewer = 0
 
         //role user  37 = MGR Finance, 38 = MGR Legal, 19 = MGR HSSE
@@ -799,6 +897,7 @@ class ActDocumentViewer : ActBase(),
         val body = HashMap<String, String>()
         body["role_user"] = roleReviewer.toString()
         body["id_contract"] = mContractId.toString()
+        body["requestReviewer"] = requestReviewer.toString()
 
         val gson = GsonBuilder().setLenient().create()
         val interceptor = HttpLoggingInterceptor()
@@ -830,9 +929,8 @@ class ActDocumentViewer : ActBase(),
             ) {
                 val result = response.body()
 
-                Log.e("Result 1", result?.toString());
                 if (result == null || result?.toString().equals("[]") || result.isEmpty()) {
-                    setDataReviewerNull(resources.getString(R.string.belum_ada_data_reviewer_staff))
+                    setDataReviewerNull(resources.getString(R.string.belum_ada_data_reviewer_staff), requestReviewer)
                 } else {
                     setDataReviewer(result)
                 }
@@ -840,77 +938,18 @@ class ActDocumentViewer : ActBase(),
             }
 
             override fun onFailure(call: Call<ArrayList<ModelReviewer>>, t: Throwable) {
-                Log.e("Result 2", t.toString());
-                setDataReviewerNull(t.message.toString())
+                setDataReviewerNull(t.message.toString(), requestReviewer)
             }
         })
     }
 
-    private fun cekContractReviewer() {
-        var jenisMgr = ""
-
-        //role user  37 = MGR Finance, 38 = MGR Legal, 19 = MGR HSSE
-        //role user  39 = Staff Finance, 40 = Staff Legal, 33 = Staff HSSE
-        if (mUserRole == 37) {
-            jenisMgr = "FINANCE_ID"
-        } else if (mUserRole == 38) {
-            jenisMgr = "LEGAL_ID"
-        } else if (mUserRole == 19) {
-            jenisMgr = "HSSE_ID"
-        } else if ((mUserRole >= 8) && (mUserRole <= 18) or (mUserRole == 20) or (mUserRole == 21)) {
-            jenisMgr = "REVIEWER_ID"
-        }
-
-        val body = HashMap<String, String>()
-        body["jenis_mgr"] = jenisMgr
-        body["id_contract"] = mContractId.toString()
-
-        val gson = GsonBuilder().setLenient().create()
-        val interceptor = HttpLoggingInterceptor()
-        interceptor.level = HttpLoggingInterceptor.Level.BODY
-
-        val okHttpClient = OkHttpClient.Builder()
-            .connectTimeout(100, TimeUnit.SECONDS)
-            .writeTimeout(100, TimeUnit.SECONDS)
-            .readTimeout(100, TimeUnit.SECONDS)
-            .build()
-
-        val retrofit = Retrofit.Builder()
-            .baseUrl(RetrofitApi.JSON_SENDER2)
-            .addConverterFactory(
-                GsonConverterFactory.create(gson)
-            )
-            .client(okHttpClient)
-        val api = retrofit.build().create(RetrofitApi::class.java)
-
-        val call = api.cekContractReviewer(
-            body,
-            "application/json"
-        )
-
-        call.enqueue(object : Callback<ResponseBody> {
-            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
-                val result = response.body()
-                val message = result?.string()
-
-                if (message?.contains("Choose Reviewer")!!) {
-                    InitChooseViewer(resources.getString(R.string.choose_viewer))
-                } else {
-                    InitChooseViewer(resources.getString(R.string.already_verified))
-                }
-
-            }
-
-            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
-                setDataReviewerNull(t.message.toString())
-            }
-        })
-    }
-
-    private fun setDataReviewerNull(message: String) {
+    private fun setDataReviewerNull(message: String, requestReviewer: Int) {
         mDialogL?.setContentView(R.layout.dialog_choose_reviewer)
         val cancelBtn = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_cancel)
         val textNone = mDialogL?.findViewById<TextView>(R.id.textNone)
+        val textTitle = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_title)
+
+        textTitle?.text = getString(R.string.choose_reviewer)
 
         textNone?.text = message
         textNone?.visibility = View.VISIBLE
@@ -919,7 +958,23 @@ class ActDocumentViewer : ActBase(),
             mDialogL?.dismiss()
         }
 
+        if (tvSign.text.toString().equals("Reviewed")){
+            fabSign.isEnabled = false
+        }
+        if (tvApprove.text.toString().equals("Reviewed 2")){
+            fabApprove.isEnabled = false
+        }
+
         fabSign.setOnClickListener {
+            mDialogL?.show()
+            if (fabExpanded == true) {
+                closeSubMenusFab()
+            } else {
+                openSubMenusFab()
+            }
+        }
+
+        fabApprove.setOnClickListener {
             mDialogL?.show()
             if (fabExpanded == true) {
                 closeSubMenusFab()
@@ -930,26 +985,63 @@ class ActDocumentViewer : ActBase(),
     }
 
     private fun setDataReviewer(result: ArrayList<ModelReviewer>) {
-        mDialogL?.setContentView(R.layout.dialog_choose_reviewer)
-        val cancelBtn = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_cancel)
-
-
-        cancelBtn?.setOnClickListener {
-            mSignPad?.clear()
-            mDialogL?.dismiss()
-
+        if (tvSign.text.toString().equals("Reviewed")){
+            fabSign.isEnabled = false
+        }
+        if (tvApprove.text.toString().equals("Reviewed 2")){
+            fabApprove.isEnabled = false
         }
 
-        val rcReviewer = mDialogL?.findViewById<RecyclerView>(R.id.rcReviewer)
-
-        rcReviewer?.setHasFixedSize(true)
-        rcReviewer?.layoutManager = LinearLayoutManager(this)
-
-        val adapter = mDialogL?.let { AdapterReviewer(result, this, mUserRole, it, this) }
-
-        rcReviewer?.adapter = adapter
-
         fabSign.setOnClickListener {
+            mDialogL?.setContentView(R.layout.dialog_choose_reviewer)
+            val cancelBtn = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_cancel)
+            val textTitle = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_title)
+
+            textTitle?.text = getString(R.string.choose_reviewer)
+
+            cancelBtn?.setOnClickListener {
+                mSignPad?.clear()
+                mDialogL?.dismiss()
+
+            }
+
+            val rcReviewer = mDialogL?.findViewById<RecyclerView>(R.id.rcReviewer)
+
+            rcReviewer?.setHasFixedSize(true)
+            rcReviewer?.layoutManager = LinearLayoutManager(this)
+
+            val adapter = mDialogL?.let { AdapterReviewer(result, this, mUserRole, it, this) }
+
+            rcReviewer?.adapter = adapter
+            mDialogL?.show()
+            if (fabExpanded == true) {
+                closeSubMenusFab()
+            } else {
+                openSubMenusFab()
+            }
+        }
+
+        fabApprove.setOnClickListener {
+            mDialogL?.setContentView(R.layout.dialog_choose_reviewer)
+            val cancelBtn = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_cancel)
+            val textTitle = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_title)
+
+            textTitle?.text = getString(R.string.choose_reviewer2)
+
+            cancelBtn?.setOnClickListener {
+                mSignPad?.clear()
+                mDialogL?.dismiss()
+
+            }
+
+            val rcReviewer = mDialogL?.findViewById<RecyclerView>(R.id.rcReviewer)
+
+            rcReviewer?.setHasFixedSize(true)
+            rcReviewer?.layoutManager = LinearLayoutManager(this)
+
+            val adapter = mDialogL?.let { AdapterReviewer2(result, this, mUserRole, it, this) }
+
+            rcReviewer?.adapter = adapter
             mDialogL?.show()
             if (fabExpanded == true) {
                 closeSubMenusFab()
@@ -959,17 +1051,25 @@ class ActDocumentViewer : ActBase(),
         }
     }
 
-    private fun InitChooseViewer(msg: String) {
+    private fun InitChooseViewer(msg: String, req: Int) {
         layoutFabApprove.visibility = View.GONE
         layoutFabReject.visibility = View.GONE
         layoutFabSign.visibility = View.VISIBLE
 
         tvSign.text = msg
-        if (!this.isFinishing)
-            GlideApp.with(this@ActDocumentViewer).load(R.drawable.ic_check2_white).into(fabSign)
 
         if (msg?.equals("Choose Reviewer")) {
-            getReviewer()
+            getReviewer(req)
+        }
+    }
+
+    private fun InitChooseViewer2(msg: String) {
+        layoutFabApprove.visibility = View.VISIBLE
+
+        tvApprove.text = msg
+
+        if (msg?.equals("Choose Reviewer 2")){
+            getReviewer(2)
         }
     }
 

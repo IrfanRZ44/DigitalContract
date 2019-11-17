@@ -35,7 +35,9 @@
                     app:cardBackgroundColor="@color/cardview_light_background"
                     app:cardCornerRadius="@dimen/_4dp"
                     app:cardElevation="@dimen/_4dp"
-                    app:cardUseCompatPadding="true" >
+                    app:cardUseCompatPadding="true"
+                    android:layout_marginBottom="@dimen/_5dp"
+                    >
 
                 <TextView
                         android:id="@+id/tvAttachment"
@@ -55,7 +57,11 @@
                     android:layout_height="wrap_content"
                     app:srcCompat="@drawable/ic_attach_white"
                     app:backgroundTint="@color/cpb_blue"
-                    app:fabSize="mini" />
+                    app:fabSize="mini"
+                    android:layout_marginBottom="@dimen/_3dp"
+                    app:elevation="@dimen/_3dp"
+                    android:layout_marginRight="@dimen/_5dp"
+                    />
 
         </LinearLayout>
 
@@ -75,7 +81,9 @@
                     app:cardBackgroundColor="@color/cardview_light_background"
                     app:cardCornerRadius="@dimen/_4dp"
                     app:cardElevation="@dimen/_4dp"
-                    app:cardUseCompatPadding="true" >
+                    app:cardUseCompatPadding="true"
+                    android:layout_marginBottom="@dimen/_5dp"
+                    >
 
                 <TextView
                         android:id="@+id/tvDownload"
@@ -95,7 +103,11 @@
                     android:layout_height="wrap_content"
                     app:srcCompat="@drawable/ic_download_white"
                     app:backgroundTint="@color/material_grey_600"
-                    app:fabSize="mini" />
+                    app:fabSize="mini"
+                    android:layout_marginBottom="@dimen/_3dp"
+                    app:elevation="@dimen/_3dp"
+                    android:layout_marginRight="@dimen/_5dp"
+                    />
 
         </LinearLayout>
 
@@ -106,7 +118,8 @@
                 android:gravity="center_vertical"
                 android:layout_gravity="bottom|end"
                 android:orientation="horizontal"
-                android:layout_marginBottom="@dimen/_6dp">
+                android:layout_marginBottom="@dimen/_6dp"
+                >
 
             <androidx.cardview.widget.CardView
                     android:layout_width="wrap_content"
@@ -114,7 +127,9 @@
                     app:cardBackgroundColor="@color/cardview_light_background"
                     app:cardCornerRadius="@dimen/_4dp"
                     app:cardElevation="@dimen/_4dp"
-                    app:cardUseCompatPadding="true" >
+                    app:cardUseCompatPadding="true"
+                    android:layout_marginBottom="@dimen/_5dp"
+                    >
 
                 <TextView
                         android:id="@+id/tvApprove"
@@ -124,7 +139,9 @@
                         android:text="Approve"
                         android:textStyle="bold"
                         android:paddingHorizontal="@dimen/_6dp"
-                        android:paddingVertical="@dimen/_2dp" />
+                        android:paddingVertical="@dimen/_2dp"
+
+                        />
 
             </androidx.cardview.widget.CardView>
 
@@ -134,6 +151,9 @@
                     android:layout_height="wrap_content"
                     app:srcCompat="@drawable/ic_check_white"
                     app:backgroundTint="@android:color/holo_green_light"
+                    android:layout_marginBottom="@dimen/_3dp"
+                    app:elevation="@dimen/_3dp"
+                    android:layout_marginRight="@dimen/_5dp"
                     app:fabSize="mini" />
 
         </LinearLayout>
@@ -153,7 +173,9 @@
                     app:cardBackgroundColor="@color/cardview_light_background"
                     app:cardCornerRadius="@dimen/_4dp"
                     app:cardElevation="@dimen/_4dp"
-                    app:cardUseCompatPadding="true" >
+                    app:cardUseCompatPadding="true"
+                    android:layout_marginBottom="@dimen/_5dp"
+                    >
 
                 <TextView
                         android:id="@+id/tvReject"
@@ -173,6 +195,9 @@
                     android:layout_height="wrap_content"
                     app:srcCompat="@drawable/ic_close_white"
                     app:backgroundTint="@color/cpb_red"
+                    android:layout_marginBottom="@dimen/_3dp"
+                    app:elevation="@dimen/_3dp"
+                    android:layout_marginRight="@dimen/_5dp"
                     app:fabSize="mini" />
 
         </LinearLayout>
@@ -191,7 +216,9 @@
                     app:cardBackgroundColor="@color/cardview_light_background"
                     app:cardCornerRadius="@dimen/_4dp"
                     app:cardElevation="@dimen/_4dp"
-                    app:cardUseCompatPadding="true" >
+                    app:cardUseCompatPadding="true"
+                    android:layout_marginBottom="@dimen/_5dp"
+                    >
                 <TextView
                         android:id="@+id/tvSign"
                         android:layout_width="wrap_content"
@@ -209,7 +236,11 @@
                     android:layout_height="wrap_content"
                     app:srcCompat="@drawable/ic_sign_white"
                     app:backgroundTint="@android:color/holo_green_light"
-                    app:fabSize="mini" />
+                    android:layout_marginBottom="@dimen/_3dp"
+                    app:elevation="@dimen/_3dp"
+                    android:layout_marginRight="@dimen/_5dp"
+                    app:fabSize="mini"
+                    />
 
         </LinearLayout>
     </LinearLayout>
@@ -233,7 +264,11 @@
                 app:srcCompat="@drawable/ic_more_vert_white"
                 app:backgroundTint="?attr/colorPrimary"
                 app:fabSize="normal"
-                android:visibility="gone"/>
+                android:visibility="gone"
+                android:layout_marginBottom="@dimen/_3dp"
+                app:elevation="@dimen/_3dp"
+                android:layout_marginRight="@dimen/_5dp"
+                />
 
     </LinearLayout>
 </FrameLayout>

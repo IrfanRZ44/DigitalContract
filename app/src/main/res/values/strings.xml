@@ -82,5 +82,7 @@
     <string name="channel_name">Digital Contract</string>
     <string name="next">Next</string>
     <string name="belum_ada_data_reviewer_staff">Belum ada data reviewer / staff</string>
+    <string name="choose_reviewer2">Choose Reviewer 2</string>
+    <string name="choose_reviewer">Choose Reviewer</string>
 
 </resources>

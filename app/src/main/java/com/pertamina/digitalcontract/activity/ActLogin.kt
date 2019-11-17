@@ -215,6 +215,7 @@ class ActLogin : AppCompatActivity(), View.OnClickListener {
     private fun imeiMatched() {
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
                 requestPermissions(arrayOf(android.Manifest.permission.READ_PHONE_STATE),
                         PERMISSIONS_REQUEST_READ_PHONE_STATE)
             }

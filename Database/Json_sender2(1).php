@@ -21,7 +21,7 @@ class Json_sender2 extends CI_Controller {
     }
 
     function get_token() {
-      // $passphrase = $this->input->get('passphrase');
+    
       // $nik        = $this->input->get('nik');
         // $contract = $this->input->post('contract');
         $client_id = '15542010';//'16314426';
@@ -50,7 +50,10 @@ class Json_sender2 extends CI_Controller {
         }
         else{
             $result = json_decode($result);
-            if($info==200) $this->upload_document($result->access_token);
+            if($info==200){
+              
+              $this->upload_document($result->access_token);  
+            } 
             else {
               echo json_encode(array("message"=>$result->error));
             }
@@ -59,16 +62,25 @@ class Json_sender2 extends CI_Controller {
 
     function upload_document($token){
         $token = $token;
+
         $endpoint = 'https://esign.idtrust.co.id/api/v2/entity/sign/request';//'https://esign-dev.bssn.go.id/api/v2/entity/sign/request';
+
         $content = trim(file_get_contents("php://input"));
         $decoded = json_decode($content);
-        $data_user        = $this->M_user->get_id($decoded->id_user)->row();
+        $contract_title = $decoded->contract_title;
+        $contract_path = $decoded->contract_path;
+        $passphrase = $decoded->passphrase;
+        $id_user = $decoded->id_user;
+        $id_contract = $decoded->id_contract;
+
+
+        $data_user        = $this->M_user->get_id($id_user)->row();
         $penandatangan = $data_user->NIK;//$decoded->penandatangan;
 
         $params = array('penandatangan' => $penandatangan,
                         'tampilan'      => 'visible',
                         'image'         => 'false',
-                        'linkQR'        => 'http://digitalcontract.mor7.com',
+                        'linkQR'        => 'http://digitalcontractv3.kabirland.technology',
                         'halaman'       => 'terakhir',
                         'yAxis'         => '60.77',
                         'xAxis'         => '95.10',
@@ -81,27 +93,29 @@ class Json_sender2 extends CI_Controller {
                     'Content-Type:multipart/form-data',
                   );
 
-        $contract_id          = $decoded->id_contract;
-        $user_id              = $decoded->id_user;
-        $contract_title       = $contract_id."_".$decoded->contract_title;
+        $contract_id          = $id_contract;
+        $user_id              = $id_user;
+        $contract_title       = $contract_id."_".$contract_title;
+        $contract_path       = $contract_path;
         $data_contract        = $this->M_contract->get_by_id($contract_id)->row();
         $reviewer_status      = $data_contract->REVIEWER_STATUS;
         $legal_status         = $data_contract->LEGAL_STATUS;
         $finance_status       = $data_contract->FINANCE_STATUS;
         $vendor_certificate   = $data_contract->VENDOR_CERTIFICATE; 
         $officer_certificate  = $data_contract->OFFICER_CERTIFICATE; 
+        $hsse_status          = $data_contract->HSSE_STATUS;
 
         //finish - tambahan
-        if (($reviewer_status=="3")&&($legal_status=="3")&&($finance_status=="3")&&($vendor_certificate!="3")) {
+        if (($reviewer_status=="5")&&($legal_status=="5")&&($finance_status=="5")&&($hsse_status=="5")&&($officer_certificate!="3")) {
             
             $this->do_compile($contract_id);
             $files = array(
-                      realpath($_SERVER['DOCUMENT_ROOT'])."/export/".$contract_title.".pdf",
+                      realpath($_SERVER['DOCUMENT_ROOT'])."/export/".$contract_path.".pdf",
                     );
                     
-        }else if (($reviewer_status=="3")&&($legal_status=="3")&&($finance_status=="3")&&($vendor_certificate=="3")) {
+        }else if (($reviewer_status=="5")&&($legal_status=="5")&&($finance_status=="5")&&($hsse_status=="5")&&($officer_certificate=="3")) {
           $files = array(
-                    realpath($_SERVER['DOCUMENT_ROOT'])."/export_signed/".$contract_title.".pdf",
+                    realpath($_SERVER['DOCUMENT_ROOT'])."/export_signed/".$contract_path.".pdf",
                   );
         }
 
@@ -142,9 +156,11 @@ class Json_sender2 extends CI_Controller {
         }
         else{
           $result = json_decode($result);
-          if($info==200) $this->signing($token,$result->id_signed);
+          if($info==200){
+              $this->signing($token,$result->id_signed);
+          }
           else {
-            echo json_encode(array("message"=>$result->error));
+            echo json_encode(array("message"=>$result->error."saya"));
           }
         }
     }
@@ -153,9 +169,18 @@ class Json_sender2 extends CI_Controller {
       $token      = $token;
       $id_document= $id_document;
       $content = trim(file_get_contents("php://input"));
-      $decoded = json_decode($content);
-      $password = $decoded->passphrase;
-      $passphrase = $password;
+        $decoded = json_decode($content);
+        $contract_title = $decoded->contract_title;
+        $contract_path = $decoded->contract_path;
+        $passphrase = $decoded->passphrase;
+        $id_user = $decoded->id_user;
+        $id_contract = $decoded->id_contract;
+
+        // $passphrase = $this->input->get('passphrase');
+        // $id_user = $this->input->get('id_user');
+        // $id_contract = $this->input->get('id_contract');
+        // $contract_title = $this->input->get('contract_title');
+        // $contract_path = $this->input->get('contract_path');    
 
       $endpoint = 'https://esign.idtrust.co.id/api/v2/entity/sign/';//'https://esign-dev.bssn.go.id/api/v2/entity/sign/';
       $params = array('passphrase'    => $passphrase,
@@ -185,13 +210,152 @@ class Json_sender2 extends CI_Controller {
 
       if($errno) {
           echo json_encode(array("message"=>"Error signing file"));
+          $this->hapusNomorContract();
       }
       else{
-        if($info==200) $this->downloadDocument($token,$id_document);
+        if($info==200){
+              $this->downloadDocument($token,$id_document);
+        } 
         else {
           $result = json_decode($result);
           echo json_encode(array("message"=>$result->error));
+      $this->hapusNomorContract();
         }
+      }
+    }
+
+    function hapusNomorContract(){
+      $id_contract = $this->input->get('id_contract');
+
+      $host = "localhost";
+      $user = "u7431121_mor7com_digital_contractv3";
+      $password = "u7431121_mor7com_digital_contractv3";
+      $namaDb = "u7431121_mor7com_digital_contractv3";
+      $kon = mysqli_connect($host, $user, $password, $namaDb);
+
+      $result = mysqli_query($kon, "SELECT `OFFICER_CONTRACT_ID` FROM `tr_officer_contract` WHERE CONTRACT_ID='$id_contract' ORDER BY COUNTER DESC LIMIT 1");
+
+      while ($row = mysqli_fetch_array($result)) {
+       $idResult = $row['OFFICER_CONTRACT_ID'];
+      
+       $delete = mysqli_query($kon, "DELETE FROM `tr_officer_contract` WHERE OFFICER_CONTRACT_ID='$idResult'");
+      }
+
+    }
+    
+    function testes(){
+      $host = "localhost";
+      $user = "mor7com_dolby";
+      $password = "mor7com_dolby";
+      $namaDb = "mor7com_dolby";
+      $kon = mysqli_connect($host, $user, $password, $namaDb);
+
+      $req = $_GET['req'];
+        if (isset($_GET['req'])) {
+          $req = $_GET['req'];
+          if ($req == 'cek_user') {
+            $result = mysqli_query($kon, "SELECT * FROM users");
+
+            if ($result) {
+              $data_user = array();
+              while ($row = mysqli_fetch_array($result)) {
+                $row_array['username'] = $row['username'];
+                $row_array['password'] = $row['password'];
+
+                array_push($data_user,$row_array);
+              }
+              echo json_encode($data_user);
+            }
+            else{
+              echo json_encode(array("response" => "Failed"));
+            }
+            }
+        }
+    }
+
+    function getReviewer(){
+      $content = trim(file_get_contents("php://input"));
+      $decoded = json_decode($content);
+      $role_user = $decoded->role_user;
+      $id_contract = $decoded->id_contract;
+
+      $host = "localhost";
+      $user = "mor7com_digitalcontractv3";
+      $password = "mor7com_digitalcontractv3";
+      $namaDb = "mor7com_digitalcontractv3";
+      $kon = mysqli_connect($host, $user, $password, $namaDb);
+
+      $result = mysqli_query($kon, "SELECT * FROM `user` WHERE USER_ROLE = '$role_user'");
+      
+      $arrayHasil = [];
+       
+      while ($row = mysqli_fetch_array($result)) { 
+        $data = array("username"=>$row['USERNAME']
+        , "name"=>$row['NAME']
+        , "user_id"=>$row['USER_ID']
+        , "email"=>$row['EMAIL']
+        , "nik"=>$row['NIK']
+        , "id_contract"=>$id_contract
+        );
+        
+        array_push($arrayHasil, $data);
+      }
+      echo json_encode($arrayHasil);
+    }
+    
+    function setReviewer(){
+      $content = trim(file_get_contents("php://input"));
+      $decoded = json_decode($content);
+      $id_user = $decoded->id_user;
+      $id_contract = $decoded->id_contract;
+      $jenis_mgr = $decoded->jenis_mgr;
+
+      $host = "localhost";
+      $user = "mor7com_digitalcontractv3";
+      $password = "mor7com_digitalcontractv3";
+      $namaDb = "mor7com_digitalcontractv3";
+      $kon = mysqli_connect($host, $user, $password, $namaDb);
+
+      $result = mysqli_query($kon, "UPDATE `tr_contract` SET `$jenis_mgr` = '$id_user' WHERE `tr_contract`.`CONTRACT_ID` = '$id_contract'");
+      
+      if ($result) {
+        echo "Success";
+      }else{
+        echo $result;
+      }
+    }
+    
+    function cekContractReviewer(){
+      $content = trim(file_get_contents("php://input"));
+      $decoded = json_decode($content);
+      $id_contract = $decoded->id_contract;
+      $jenis_mgr = $decoded->jenis_mgr;
+      $jenis_mgr2 = $decoded->jenis_mgr2;
+
+      $host = "localhost";
+      $user = "mor7com_digitalcontractv3";
+      $password = "mor7com_digitalcontractv3";
+      $namaDb = "mor7com_digitalcontractv3";
+      $kon = mysqli_connect($host, $user, $password, $namaDb);
+
+      $result = mysqli_query($kon, "SELECT * FROM `tr_contract` WHERE `tr_contract`.`CONTRACT_ID` = '$id_contract'");
+      
+      $data1 = 0;
+      $data2 = 0;
+
+      while ($row = mysqli_fetch_array($result)) {
+          $data1 = $row[$jenis_mgr];
+
+          if (isset($jenis_mgr2) || jenis_mgr2 != "") {
+            $data2 = $row[$jenis_mgr2];
+          }
+          echo json_encode($data1 + "___" + $data2);
+          // if ($data == 0){
+          // }
+          // else{
+              // 
+          // }
+          // echo json_encode(array("result"=>"Reviewed"));
       }
     }
 
@@ -225,22 +389,30 @@ class Json_sender2 extends CI_Controller {
       else{
         if($info==200) {
           //start - tambahan
-          $content = trim(file_get_contents("php://input"));
-          $decoded = json_decode($content);
-          $contract_id = $decoded->id_contract;
-          $user_id = $decoded->id_user;
-          $contract_title = $contract_id."_".$decoded->contract_title;
+        $content = trim(file_get_contents("php://input"));
+        $decoded = json_decode($content);
+        $contract_title = $decoded->contract_title;
+        $contract_path = $decoded->contract_path;
+        $passphrase = $decoded->passphrase;
+        $user_id = $decoded->id_user;
+        $contract_id = $decoded->id_contract;
+
+      
+          $contract_title = $contract_id."_".$contract_title;
+          $contract_path = $contract_path;
           $data_contract = $this->M_contract->get_by_id($contract_id)->row();
           $reviewer_status = $data_contract->REVIEWER_STATUS;
           $legal_status = $data_contract->LEGAL_STATUS;
           $finance_status = $data_contract->FINANCE_STATUS;
           $vendor_certificate = $data_contract->VENDOR_CERTIFICATE; 
           $officer_certificate = $data_contract->OFFICER_CERTIFICATE; 
+          $hsse_status = $data_contract->HSSE_STATUS; 
+
           //finish - tambahan
-          if (($reviewer_status=="3")&&($legal_status=="3")&&($finance_status=="3")&&($vendor_certificate!="3")) {
-            $downloadPath = realpath($_SERVER['DOCUMENT_ROOT'])."/export_signed/".$contract_title.".pdf";
-          }else if (($reviewer_status=="3")&&($legal_status=="3")&&($finance_status=="3")&&($vendor_certificate=="3")) {
-            $downloadPath = realpath($_SERVER['DOCUMENT_ROOT'])."/export_signed/".$contract_title."_final.pdf";
+          if (($reviewer_status=="5")&&($legal_status=="5")&&($finance_status=="5")&&($hsse_status=="5")&&($officer_certificate!="3")) {
+            $downloadPath = realpath($_SERVER['DOCUMENT_ROOT'])."/export_signed/".$contract_path.".pdf";
+          }else if (($reviewer_status=="5")&&($legal_status=="5")&&($finance_status=="5")&&($hsse_status=="5")&&($officer_certificate=="3")) {
+            $downloadPath = realpath($_SERVER['DOCUMENT_ROOT'])."/export_signed/".$contract_path."_final.pdf";
           }
 
           /*$downloadPath = realpath($_SERVER['DOCUMENT_ROOT'])."/export_signed/87_testing11_final.pdf";*/
@@ -273,6 +445,7 @@ class Json_sender2 extends CI_Controller {
 
           $param2 = ""; //isi note kontrak jika direject
 
+            // echo json_encode(array("message"=>"Success"));
           $this->set_status($contract_id, $user_id, $param1, $param2);
 
           //end - tambahan
@@ -329,8 +502,8 @@ class Json_sender2 extends CI_Controller {
         $param2 = ""; //isi note kontrak jika direject*/
         
         // Change the line below to your timezone!
-		date_default_timezone_set('Asia/Makassar');
-		$date = date("Y-m-d H:i:s");
+    date_default_timezone_set('Asia/Makassar');
+    $date = date("Y-m-d H:i:s");
         
         $data_user = $this->M_user->get_id($user_id)->row();
         $data_contract = $this->M_contract->get_id($contract_id)->row();
@@ -343,9 +516,9 @@ class Json_sender2 extends CI_Controller {
         
         switch ($role) {
             case $this->ROLE_VENDOR:
-                if ($data_contract->VENDOR_CERTIFICATE < $this->STATUS_APPROVED) {
+                if ($data_contract->VENDOR_CERTIFICATE == $this->STATUS_APPROVED) {
                     $data = array(
-                        "vendor_certificate" => $param1,
+                        "vendor_certificate" => 5,
                         "vendor_signature" => $param2,
                         "vendor_datetime" => $date,
                     );
@@ -376,6 +549,7 @@ class Json_sender2 extends CI_Controller {
             $status_legal = $data->LEGAL_STATUS;
             $status_reviewer = $data->REVIEWER_STATUS;
             $status_finance = $data->FINANCE_STATUS;
+            $status_hsse = $data->HSSE_STATUS;
             $status_vendor = $data->VENDOR_CERTIFICATE;
             $status_officer = $data->OFFICER_CERTIFICATE;
 
@@ -400,7 +574,7 @@ class Json_sender2 extends CI_Controller {
             $email_officer = $data_officer->EMAIL;*/
             /*$this->send_email($email, 'Admin Digital Contract', 'Ada kontrak baru untuk anda review.');*/
             
-            if ( ($status_legal=='3') && ($status_reviewer=='3') && ($status_finance=='3') && ($status_vendor!='3') && ($status_officer!='3') ) {
+            if ( ($status_legal=='5') && ($status_reviewer=='5') && ($status_finance=='5') && ($status_vendor=='5') && ($status_hsse=='5') && ($status_officer!='3') ) {
                 $data_vendor = $this->M_user->get_id($vendor_id)->row();
                 $email_vendor = $data_vendor->EMAIL;
 
@@ -411,7 +585,7 @@ class Json_sender2 extends CI_Controller {
 
                 $this->send_email($email_vendor, 'Admin Digital Contract', 'Yth. Vendor, Ada kontrak baru untuk anda tandatangani : '.$contract_title);
             }
-            if ( ($status_legal=='3') && ($status_reviewer=='3') && ($status_finance=='3') && ($status_vendor=='3') && ($status_officer!='3') ) {
+            if ( ($status_legal=='5') && ($status_reviewer=='5') && ($status_finance=='5') && ($status_vendor=='5') && ($status_hsse=='5') && ($status_officer!='3') ) {
                 $data_officer = $this->M_user->get_id($officer_id)->row();
                 $email_officer = $data_officer->EMAIL;
 
@@ -422,7 +596,7 @@ class Json_sender2 extends CI_Controller {
 
                 $this->send_email($email_officer, 'Admin Digital Contract', 'Yth. Officer, Ada kontrak baru untuk anda tandatangani : '.$contract_title);
             }
-            if ( ($status_legal=='3') && ($status_reviewer=='3') && ($status_finance=='3') && ($status_vendor=='3') && ($status_officer=='3') ) {
+            if ( ($status_legal=='5') && ($status_reviewer=='5') && ($status_finance=='5') && ($status_vendor=='5') && ($status_hsse=='5')  && ($status_officer=='3') ) {
                 $data_vendor = $this->M_user->get_id($vendor_id)->row();
                 $email_vendor = $data_vendor->EMAIL;
                 $this->send_email($email_vendor, 'Admin Digital Contract', 'Yth. Vendor, Kontrak sudah selesai : '.$contract_title);
@@ -496,9 +670,8 @@ class Json_sender2 extends CI_Controller {
 
                 $array_officer_contract = $this->M_officer_contract->search(array('officer_id' => $officer_id))->result_array();
 
-                
 
-                $new_id = 0;;
+                $new_id = 0;
 
                 if (substr($officer_data->CREATED_ON, 0, 4) == substr($date, 0, 4)) {
 
@@ -558,7 +731,6 @@ class Json_sender2 extends CI_Controller {
                 $officer_data_ = $this->M_user->get_by_id($off_id)->row();
                 $signature_officer = $officer_data_->SIGNATURE;
                 $signature_vendor = $vendor_data_->SIGNATURE;
-
 
                 $field = $this->M_field->get_active()->result();
 
@@ -676,7 +848,7 @@ class Json_sender2 extends CI_Controller {
 
                             case '[CONTRACT_NUMBER]':
 
-                                $field_data = $contract_code.'/'.$officer_data->CODEOFFICER.'/'.date('Y').'-S0';
+                                $field_data = '/'.$officer_data->CODEOFFICER.'/'.date('Y').'-S0';
 
                                 if ($field_data !== '') { $template_content = str_replace($field_name, $field_data, $template_content); }
 
@@ -752,6 +924,7 @@ class Json_sender2 extends CI_Controller {
 
 
 
+                
                 $this->M_contract->set($contract_id, array('compiled' => $template_content));
 
                 
@@ -982,7 +1155,7 @@ class Json_sender2 extends CI_Controller {
 
         $data = $this->M_contract->get_by_id($contract_id)->row();
 
-        $file_name = $data->CONTRACT_ID.'_'.$data->CONTRACT_TITLE;
+        $file_name = $data->PDF_PATH;
 
         $margin_standard = 20;
 

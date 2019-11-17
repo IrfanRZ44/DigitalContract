@@ -24,12 +24,9 @@ import retrofit2.http.Url;
  */
 
 public interface RetrofitApi {
-//    String BASE_URL = "http://digitalcontract.mor7.com/";
-//    String BASE_URL = "http://digitalcontractv3.kabirland.technology/";
-    String BASE_URL = "http://digitalcontractv2.mor7.com/";
+    String BASE_URL = "https://digitalcontractv3.mor7.com/";
     String JSON_SENDER1 = BASE_URL + "api/v1/Json_sender/";
     String JSON_SENDER2 = BASE_URL + "api/v1/Json_sender2/";
-//    String SIGN_IN_URL = BASE_URL + "api/v1/";
 
 
     @Headers("Accept:application/json")
