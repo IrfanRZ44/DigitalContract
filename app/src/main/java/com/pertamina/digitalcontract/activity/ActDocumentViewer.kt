@@ -118,7 +118,6 @@ class ActDocumentViewer : ActBase(),
         mUserRole = session.role?.toInt() ?: -1
         mUserId = session.id
 
-        Log.e("User roleasd ", Integer.toString(mUserRole))
         canApprove =
             (mUserRole == 39) or (mUserRole == 40) or (mUserRole == 3) or (mUserRole == 33) or ((mUserRole >= 22) and (mUserRole <= 32) or (mUserRole == 34) or (mUserRole == 35) or (mUserRole == 36))
         canChooseReviewer =
@@ -126,11 +125,12 @@ class ActDocumentViewer : ActBase(),
         canPublish = (mUserRole == 41)
 
         if (canChooseReviewer) {
-            if (mContractStatus == 6 || mContractStatus == 4 || mContractStatus == 5) {
+            if (mContractStatus == 6 || mContractStatus == 4 || mContractStatus == 5 || mContractStatus == 8 || mContractStatus == 9) {
                 canApprove = true
                 canChooseReviewer = false
             }
         }
+
         title = mDocTitle
 
         dialog = Dialog(this, R.style.CustomDialogTheme)
@@ -194,7 +194,7 @@ class ActDocumentViewer : ActBase(),
         }
 
         if ((canApprove) or (mUserRole == 5)) {
-            if (mContractId != -1 && mContractStatus == 0) {
+            if (mContractId != -1 && (mContractStatus == 0 || mContractStatus == 8)) {
                 changeStatusContract(1, "", false)
             }
         }
@@ -319,10 +319,10 @@ class ActDocumentViewer : ActBase(),
                 }
             }
             //jika contract masih pending diperlukan aksi
-            else if ((mContractStatus <= 1) or (mContractStatus == 6)) {
+            else if ((mContractStatus <= 1) or (mContractStatus == 6) or (mContractStatus == 8) or (mContractStatus == 9)) {
                 //seleksi tombol antara (approve dan reject) atau (sign)
                 if (canApprove) { //seleksi aksi yang sesuai untuk contract
-                    if (mContractStatus <= 1) {
+                    if (mContractStatus <= 1 || mContractStatus == 8 || mContractStatus == 9) {
                         InitApprover("Staff", "Request", 0)                                                      //selain vendor dan officer bisa approve tombol
                     } else if (mContractStatus == 6) {
                         InitApprover("Manager", "Request", 0)          //selain vendor dan officer bisa approve tombol
@@ -340,10 +340,13 @@ class ActDocumentViewer : ActBase(),
                     if (mContractStatus == 2) {
                         fabReject.isEnabled = false
                         InitApprover("Staff", "Reject", 0)
-                    } else if (mContractStatus == 3) {
+                    } else if (mContractStatus == 10) {
+                        fabReject.isEnabled = false
+                        InitApprover("Staff", "Reject", 0)
+                    } else if (mContractStatus == 3 || mContractStatus == 11) {
                         fabApprove.isEnabled = false
-                        InitApprover("Staff", "Apprrove", 0)
-                    } else if (mContractStatus == 4) {
+                        InitApprover("Staff", "Approve", 0)
+                    } else if (mContractStatus == 4 || mContractStatus == 12) {
                         if ((mUserRole == 39) or (mUserRole == 40) or (mUserRole == 33) or (mUserRole == 3) or ((mUserRole >= 22) and (mUserRole <= 32) or (mUserRole == 34) or (mUserRole == 35))){
                             fabReject.isEnabled = true
                             fabApprove.isEnabled = true
@@ -357,7 +360,7 @@ class ActDocumentViewer : ActBase(),
                             fabReject.isEnabled = false
                             InitApprover("Manager", "Reject", 0)
                         }
-                    } else if (mContractStatus == 5){
+                    } else if (mContractStatus == 5 || mContractStatus == 13){
                         fabApprove.isEnabled = false
                         InitApprover("Staff", "Approve", 0)
                     }
@@ -427,7 +430,6 @@ class ActDocumentViewer : ActBase(),
         fabApprove.setOnClickListener {
             mDialogL?.setContentView(R.layout.dialog_universal_warning)
             mDialogL?.show()
-
 
             //3 = approved
             val okBtn = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_ok)
@@ -543,7 +545,11 @@ class ActDocumentViewer : ActBase(),
         } else if (mUserRole == 33) {
             jenisMgr = "HSSE_NOTE"
         } else if ((mUserRole >= 22) and (mUserRole <= 32) or (mUserRole == 34) or (mUserRole == 35)) {
-            jenisMgr = "REVIEWER_NOTE"
+            if (mContractStatus == 4){
+                jenisMgr = "REVIEWER_NOTE"
+            } else{
+                jenisMgr = "REVIEWER_NOTE_2"
+            }
         }
 
         val body = HashMap<String, String>()
@@ -827,19 +833,19 @@ class ActDocumentViewer : ActBase(),
                     }else{
                         InitChooseViewer(resources.getString(R.string.already_verified), 3)
                     }
-                }
 
-                if (jenisMgr2.equals("REVIEWER_ID_2")) {
-                    if (hasil1?.get(1)?.contains("0")!!) {
-                        if (!this@ActDocumentViewer.isFinishing)
-                            GlideApp.with(this@ActDocumentViewer).load(R.drawable.ic_playlist_add_white).into(fabApprove)
-                        fabApprove.isEnabled = true;
-                        InitChooseViewer2(resources.getString(R.string.choose_viewer) + " 2")
-                    } else {
-                        if (!this@ActDocumentViewer.isFinishing)
-                            GlideApp.with(this@ActDocumentViewer).load(R.drawable.ic_check2_white).into(fabApprove)
-                        fabApprove.isEnabled = true;
-                        InitChooseViewer2(resources.getString(R.string.already_verified) + " 2")
+                    if (jenisMgr2.equals("REVIEWER_ID_2")) {
+                        if (hasil1?.get(1)?.contains("0")!!) {
+                            if (!this@ActDocumentViewer.isFinishing)
+                                GlideApp.with(this@ActDocumentViewer).load(R.drawable.ic_playlist_add_white).into(fabApprove)
+                            fabApprove.isEnabled = true;
+                            InitChooseViewer2(resources.getString(R.string.choose_viewer) + " 2")
+                        } else {
+                            if (!this@ActDocumentViewer.isFinishing)
+                                GlideApp.with(this@ActDocumentViewer).load(R.drawable.ic_check2_white).into(fabApprove)
+                            fabApprove.isEnabled = true;
+                            InitChooseViewer2(resources.getString(R.string.already_verified) + " 2")
+                        }
                     }
                 }
 
@@ -1088,9 +1094,14 @@ class ActDocumentViewer : ActBase(),
         body["id_user"] = mUserId.toString()
         body["id_contract"] = mContractId.toString()
         body["user_status"] = currentStatus.toString()
+        if(mContractStatus == 8 || mContractStatus == 9){
+            body["requestReviewer"] = "2"
+        }
+        else{
+            body["requestReviewer"] = "1"
+        }
         body["note"] = note
 
-        Log.e("Body change status", body.toString())
         disposable = service.setReadStatus(body)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -1104,13 +1115,27 @@ class ActDocumentViewer : ActBase(),
                     val obj = JSONObject(result.string())
                     val response = obj.getInt("response")
                     if (response == 1) {
-                        mContractStatus = currentStatus
+                        if(mContractStatus == 8 || mContractStatus == 9){
+                            if (currentStatus == 2){
+                                mContractStatus = 10
+                            }
+                            else if (currentStatus == 3){
+                                mContractStatus = 11
+                            }
+                        }
+                        else{
+                            mContractStatus = currentStatus
+                        }
+
+                        Log.e("Current", mContractStatus.toString())
+
                         when (currentStatus) {
                             2 -> dialogSuccess("Document has been rejected", currentStatus)
                             3 -> dialogSuccess("Document has been approved", currentStatus)
                             4 -> dialogSuccess("Document has been rejected", currentStatus)
                             5 -> dialogSuccess("Document has been approved", currentStatus)
                         }
+
                     }
 
                     /*  if (refreshAfterFinish) {
@@ -1158,11 +1183,22 @@ class ActDocumentViewer : ActBase(),
         btOk?.setOnClickListener {
             dialog?.dismiss()
 
-            if (currentStatus == 2 || currentStatus == 3 || currentStatus == 4 || currentStatus == 5) {
+            if(mContractStatus == 10){
+                val intent = intent
+                finish()
+                intent.putExtra("DOC_STATUS", 10)
+                startActivity(intent)
+            } else if(mContractStatus == 11){
+                val intent = intent
+                finish()
+                intent.putExtra("DOC_STATUS", 11)
+                startActivity(intent)
+            } else if (currentStatus == 2 || currentStatus == 3 || currentStatus == 4 || currentStatus == 5) {
                 val intent = intent
                 finish()
                 intent.putExtra("DOC_STATUS", currentStatus)
                 startActivity(intent)
+                Log.e("Mulai ", "ulang" + currentStatus)
             }
         }
         dialog?.show()
