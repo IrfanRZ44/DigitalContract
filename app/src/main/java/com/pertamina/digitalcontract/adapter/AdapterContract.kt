@@ -103,9 +103,6 @@ class AdapterContract(
                 } else {
                     myStatus = Integer.parseInt(statusOfficer)
                 }
-                Log.e("officer ", statusOfficer + "saya null")
-                Log.e("Vendor ", statusVendor)
-                Log.e("status ", myStatus.toString())
             } else if (mUserRole == UserRole.Vendor) {
                 val statusVendor = items.VENDOR_CERTIFICATE
                 if (statusVendor == "") {
@@ -116,45 +113,75 @@ class AdapterContract(
                     myStatus = 3;
                 }
             } else if (mUserRole == UserRole.Mgr_Finance) {
-                if ((items?.FINANCE_ID == "0") or (items?.FINANCE_ID == "")) {
+                if (items?.MGR_FINANCE_STATUS == "") {
                     myStatus = 0
                 } else {
-                    if (items?.FINANCE_STATUS == "3") {
-                        myStatus = 6
-                    } else if (items?.FINANCE_STATUS == "4") {
-                        myStatus = 4
-                    } else if (items?.FINANCE_STATUS == "5") {
-                        myStatus = 5
-                    } else {
-                        myStatus = 7
+                    if (items?.FINANCE_ID == "0"){
+                        myStatus = items.MGR_FINANCE_STATUS?.toInt() ?: 0
+                    }else{
+                        if (items?.FINANCE_STATUS == "0" && items?.MGR_FINANCE_STATUS == "3"){
+                            myStatus = 10
+                        }else if (items?.FINANCE_STATUS == "1" && items?.MGR_FINANCE_STATUS == "3"){
+                            myStatus = 11
+                        }else if (items?.FINANCE_STATUS == "2" && items?.MGR_FINANCE_STATUS == "3"){
+                            myStatus = 12
+                        }else if (items?.FINANCE_STATUS == "3" && items?.MGR_FINANCE_STATUS == "3"){
+                            myStatus = 13
+                        }else if (items?.FINANCE_STATUS == "3" && items?.MGR_FINANCE_STATUS == "4"){
+                            myStatus = 14
+                        }else if (items?.FINANCE_STATUS == "3" && items?.MGR_FINANCE_STATUS == "5"){
+                            myStatus = 15
+                        }else{
+                            myStatus = 1
+                        }
                     }
                 }
             } else if (mUserRole == UserRole.Mgr_HSSE_MOR_VII) {
-                if ((items?.HSSE_ID == "0") or (items?.HSSE_ID == "")) {
+                if (items?.MGR_HSSE_STATUS == "") {
                     myStatus = 0
                 } else {
-                    if (items?.HSSE_STATUS == "3") {
-                        myStatus = 6
-                    } else if (items?.HSSE_STATUS == "4") {
-                        myStatus = 4
-                    } else if (items?.HSSE_STATUS == "5") {
-                        myStatus = 5
-                    } else {
-                        myStatus = 7
+                    if (items?.HSSE_ID == "0"){
+                        myStatus = items.MGR_HSSE_STATUS?.toInt() ?: 0
+                    }else{
+                        if (items?.HSSE_STATUS == "0" && items?.MGR_HSSE_STATUS == "3"){
+                            myStatus = 10
+                        }else if (items?.HSSE_STATUS == "1" && items?.MGR_HSSE_STATUS == "3"){
+                            myStatus = 11
+                        }else if (items?.HSSE_STATUS == "2" && items?.MGR_HSSE_STATUS == "3"){
+                            myStatus = 12
+                        }else if (items?.HSSE_STATUS == "3" && items?.MGR_HSSE_STATUS == "3"){
+                            myStatus = 13
+                        }else if (items?.HSSE_STATUS == "3" && items?.MGR_HSSE_STATUS == "4"){
+                            myStatus = 14
+                        }else if (items?.HSSE_STATUS == "3" && items?.MGR_HSSE_STATUS == "5"){
+                            myStatus = 15
+                        }else{
+                            myStatus = 1
+                        }
                     }
                 }
             } else if (mUserRole == UserRole.Mgr_Legal) {
-                if ((items?.LEGAL_ID == "0") or (items?.LEGAL_ID == "")) {
+                if (items?.MGR_LEGAL_STATUS == "") {
                     myStatus = 0
                 } else {
-                    if (items?.LEGAL_STATUS == "3") {
-                        myStatus = 6
-                    } else if (items?.LEGAL_STATUS == "4") {
-                        myStatus = 4
-                    } else if (items?.LEGAL_STATUS == "5") {
-                        myStatus = 5
-                    } else {
-                        myStatus = 7
+                    if (items?.LEGAL_ID == "0"){
+                        myStatus = items.MGR_LEGAL_STATUS?.toInt() ?: 0
+                    }else{
+                        if (items?.LEGAL_STATUS == "0" && items?.MGR_LEGAL_STATUS == "3"){
+                            myStatus = 10
+                        }else if (items?.LEGAL_STATUS == "1" && items?.MGR_LEGAL_STATUS == "3"){
+                            myStatus = 11
+                        }else if (items?.LEGAL_STATUS == "2" && items?.MGR_LEGAL_STATUS == "3"){
+                            myStatus = 12
+                        }else if (items?.LEGAL_STATUS == "3" && items?.MGR_LEGAL_STATUS == "3"){
+                            myStatus = 13
+                        }else if (items?.LEGAL_STATUS == "3" && items?.MGR_LEGAL_STATUS == "4"){
+                            myStatus = 14
+                        }else if (items?.LEGAL_STATUS == "3" && items?.MGR_LEGAL_STATUS == "5"){
+                            myStatus = 15
+                        }else{
+                            myStatus = 1
+                        }
                     }
                 }
             } else if ((mUserRole == UserRole.Mgr_HC) or (mUserRole == UserRole.Mgr_TSR_VII)
@@ -258,7 +285,7 @@ class AdapterContract(
 
             tvStatus2.visibility = View.GONE
             when (myStatus) {
-                13 //already aproved by manager
+                15 //already aproved by staff and approved by manager
                 -> {
                     tvStatus2.setText(R.string.fa_check)
                     tvStatus2.setTextColor(
@@ -277,43 +304,20 @@ class AdapterContract(
                             null
                         )
                     )
-                    viewColor.background = ResourcesCompat.getDrawable(
-                        itemView.resources,
-                        R.color.cpb_green_dark,
-                        null
-                    )
-                }
-                12 //reject by manager
-                -> {
-                    tvStatus.setText(R.string.fa_unlike)
-                    tvStatus.setTextColor(
-                        ResourcesCompat.getColor(
-                            itemView.resources,
-                            R.color.redSoft,
-                            null
-                        )
-                    )
                     viewColor.background =
-                        ResourcesCompat.getDrawable(itemView.resources, R.color.redSoft, null)
+                        ResourcesCompat.getDrawable(itemView.resources, R.color.cpb_green_dark, null)
                 }
-                11 //approved staff
+                14 //already aproved by staff and rejected by manager
                 -> {
-                    tvStatus.setText(R.string.fa_check)
-                    tvStatus.setTextColor(
+                    tvStatus2.setText(R.string.fa_check)
+                    tvStatus2.setTextColor(
                         ResourcesCompat.getColor(
                             itemView.resources,
                             R.color.cpb_green_dark,
                             null
                         )
                     )
-                    viewColor.background = ResourcesCompat.getDrawable(
-                        itemView.resources,
-                        R.color.cpb_green_dark,
-                        null
-                    )
-                }
-                10 //reject
-                -> {
+                    tvStatus2.visibility = View.VISIBLE
                     tvStatus.setText(R.string.fa_times)
                     tvStatus.setTextColor(
                         ResourcesCompat.getColor(
@@ -324,6 +328,94 @@ class AdapterContract(
                     )
                     viewColor.background =
                         ResourcesCompat.getDrawable(itemView.resources, R.color.redSoft, null)
+                }
+                13 //already aproved by staff,, wait action for manager
+                -> {
+                    tvStatus2.setText(R.string.fa_check)
+                    tvStatus2.setTextColor(
+                        ResourcesCompat.getColor(
+                            itemView.resources,
+                            R.color.cpb_green_dark,
+                            null
+                        )
+                    )
+                    tvStatus2.visibility = View.VISIBLE
+                    tvStatus.setText(R.string.fa_pending)
+                    tvStatus.setTextColor(
+                        ResourcesCompat.getColor(
+                            itemView.resources,
+                            R.color.material_grey_600,
+                            null
+                        )
+                    )
+                    viewColor.background =
+                        ResourcesCompat.getDrawable(itemView.resources, R.color.material_grey_600, null)
+                }
+                12 //reject by staff
+                -> {
+                    tvStatus2.setText(R.string.fa_times)
+                    tvStatus2.setTextColor(
+                        ResourcesCompat.getColor(
+                            itemView.resources,
+                            R.color.redSoft,
+                            null
+                        )
+                    )
+                    tvStatus2.visibility = View.VISIBLE
+                    tvStatus.setText(R.string.fa_share)
+                    tvStatus.setTextColor(
+                        ResourcesCompat.getColor(
+                            itemView.resources,
+                            R.color.cpb_blue_dark,
+                            null
+                        )
+                    )
+                    viewColor.background =
+                        ResourcesCompat.getDrawable(itemView.resources, R.color.cpb_green_dark, null)
+                }
+                11 //pending in staff
+                -> {
+                    tvStatus2.setText(R.string.fa_pending)
+                    tvStatus2.setTextColor(
+                        ResourcesCompat.getColor(
+                            itemView.resources,
+                            R.color.material_grey_600,
+                            null
+                        )
+                    )
+                    tvStatus2.visibility = View.VISIBLE
+                    tvStatus.setText(R.string.fa_share)
+                    tvStatus.setTextColor(
+                        ResourcesCompat.getColor(
+                            itemView.resources,
+                            R.color.cpb_blue_dark,
+                            null
+                        )
+                    )
+                    viewColor.background =
+                        ResourcesCompat.getDrawable(itemView.resources, R.color.cpb_green_dark, null)
+                }
+                10 //already disposisi or reviewed by manager
+                -> {
+                    tvStatus2.setText(R.string.fa_pending)
+                    tvStatus2.setTextColor(
+                        ResourcesCompat.getColor(
+                            itemView.resources,
+                            R.color.material_grey_600,
+                            null
+                        )
+                    )
+                    tvStatus2.visibility = View.VISIBLE
+                    tvStatus.setText(R.string.fa_share)
+                    tvStatus.setTextColor(
+                        ResourcesCompat.getColor(
+                            itemView.resources,
+                            R.color.cpb_blue_dark,
+                            null
+                        )
+                    )
+                    viewColor.background =
+                        ResourcesCompat.getDrawable(itemView.resources, R.color.cpb_green_dark, null)
                 }
                 7 //already disposisi or reviewed by manager
                 -> {

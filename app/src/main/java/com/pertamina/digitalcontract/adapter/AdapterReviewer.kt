@@ -28,12 +28,15 @@ import com.pertamina.digitalcontract.activity.ActDocumentViewer
 import com.pertamina.digitalcontract.model.ModelReviewer
 import com.pertamina.digitalcontract.rest.RetrofitApi
 import com.pertamina.digitalcontract.util.FontAwasomeTextView
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.list_reviewer.*
 import kotlinx.android.synthetic.main.sub_fab.*
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
 import okhttp3.logging.HttpLoggingInterceptor
 import org.jetbrains.anko.textColor
+import org.json.JSONObject
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -108,7 +111,7 @@ class AdapterReviewer(
             body["id_user"] = reviewer.userId
             body["id_contract"] = reviewer.id_contract
             body["jenis_mgr"] = jenisMgr
-            Log.e("Body select", body.toString());
+            Log.e("Body select", body.toString())
 
             val gson = GsonBuilder().setLenient().create()
             val interceptor = HttpLoggingInterceptor()
@@ -138,10 +141,8 @@ class AdapterReviewer(
                     val result = response.body()
                     val message = result?.string()
 
-                    progressDialog.dismiss()
-
                     if (message?.contains("Success")!!){
-                        dialogSuccess("Berhasil memilih reviewer", dialog, context, activity)
+                        changeStatusContract(3, reviewer, context, dialog, activity, progressDialog)
                     }
                     else{
                         dialogFailed("Gagal memilih reviewer", dialog, context)
@@ -154,6 +155,62 @@ class AdapterReviewer(
                 }
             })
 
+        }
+
+        private fun changeStatusContract(currentStatus: Int, reviewer: ModelReviewer, context: Context, dialog: Dialog, activity: Activity, progressDialog: ProgressDialog) {
+            val session = SessionManager(context)
+            val body = HashMap<String, String>()
+            body["id_user"] = session?.id.toString()
+            body["id_contract"] = reviewer?.id_contract.toString()
+            body["user_status"] = currentStatus.toString()
+            body["note"] = ""
+
+            Log.e("Body choose set status ", body.toString())
+
+            val gson = GsonBuilder().setLenient().create()
+            val interceptor = HttpLoggingInterceptor()
+            interceptor.level = HttpLoggingInterceptor.Level.BODY
+
+            val okHttpClient = OkHttpClient.Builder()
+                .connectTimeout(100, TimeUnit.SECONDS)
+                .writeTimeout(100, TimeUnit.SECONDS)
+                .readTimeout(100, TimeUnit.SECONDS)
+                .build()
+
+            val retrofit = Retrofit.Builder()
+                .baseUrl(RetrofitApi.JSON_SENDER1)
+                .addConverterFactory(
+                    GsonConverterFactory.create(gson)
+                )
+                .client(okHttpClient)
+            val api = retrofit.build().create(RetrofitApi::class.java)
+
+            val call = api.set_status(
+                body,
+                "application/json"
+            )
+
+            call.enqueue(object : Callback<ResponseBody> {
+                override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                    val result = response.body()
+                    val message = result?.string()
+                    val obj = JSONObject(message)
+                    val response = obj.getInt("response")
+
+                    progressDialog.dismiss()
+                    if (response == 1) {
+                        dialogSuccess("Berhasil memilih reviewer", dialog, context, activity)
+                    }
+                    else{
+                        dialogFailed("Gagal memilih reviewer", dialog, context)
+                    }
+                }
+
+                override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                    progressDialog.dismiss()
+                    dialogFailed(t.message.toString(), dialog, context)
+                }
+            })
         }
 
         fun dialogSuccess(teks: String, dialog: Dialog, context: Context, activity: Activity) {

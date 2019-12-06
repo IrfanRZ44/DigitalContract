@@ -9,12 +9,18 @@ open class Contract {
     open var CONTRACT_TITLE : String? = ""
     @field:SerializedName("CREATED_ON")
     open var CREATED_ON : String? = ""
+    @field:SerializedName("MGR_LEGAL_STATUS")
+    open var MGR_LEGAL_STATUS : String? = ""
     @field:SerializedName("LEGAL_STATUS")
     open var LEGAL_STATUS : String? = ""
+    @field:SerializedName("MGR_REVIEWER_STATUS")
+    open var MGR_REVIEWER_STATUS : String? = ""
     @field:SerializedName("REVIEWER_STATUS")
     open var REVIEWER_STATUS : String? = ""
     @field:SerializedName("REVIEWER_STATUS_2")
     open var REVIEWER_STATUS_2 : String? = ""
+    @field:SerializedName("MGR_FINANCE_STATUS")
+    open var MGR_FINANCE_STATUS : String? = ""
     @field:SerializedName("FINANCE_STATUS")
     open var FINANCE_STATUS : String? = ""
     @field:SerializedName("VENDOR_SIGNATURE")
@@ -33,6 +39,8 @@ open class Contract {
     open var FINANCE_ID : String? = ""
     @field:SerializedName("HSSE_ID")
     open var HSSE_ID : String? = ""
+    @field:SerializedName("MGR_HSSE_STATUS")
+    open var MGR_HSSE_STATUS : String? = ""
     @field:SerializedName("HSSE_STATUS")
     open var HSSE_STATUS : String? = ""
     @field:SerializedName("FUNGSI_ID")

@@ -28,7 +28,6 @@ public interface RetrofitApi {
     String JSON_SENDER1 = BASE_URL + "api/v1/Json_sender/";
     String JSON_SENDER2 = BASE_URL + "api/v1/Json_sender2/";
 
-
     @Headers("Accept:application/json")
     @POST("get_token")
     Call<ResponseBody> signDoc(@Body Map<String,String> input, @Header("Content-Type") String contentType);
@@ -40,6 +39,10 @@ public interface RetrofitApi {
     @Headers("Accept:application/json")
     @POST("setReviewer")
     Call<ResponseBody> setReviewer(@Body Map<String,String> input, @Header("Content-Type") String contentType);
+
+    @Headers("Accept:application/json")
+    @POST("set_status")
+    Call<ResponseBody> set_status(@Body Map<String,String> input, @Header("Content-Type") String contentType);
 
     @Headers("Accept:application/json")
     @POST("cekContractReviewer")

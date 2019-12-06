@@ -77,7 +77,6 @@ class ActDocumentViewer : ActBase(),
 
     private lateinit var keyStore: KeyStore
     private lateinit var keyGenerator: KeyGenerator
-
     private var dialog: Dialog? = null
     private var mDialogL: Dialog? = null
     private var mDialogR: Dialog? = null
@@ -125,7 +124,7 @@ class ActDocumentViewer : ActBase(),
         canPublish = (mUserRole == 41)
 
         if (canChooseReviewer) {
-            if (mContractStatus == 6 || mContractStatus == 4 || mContractStatus == 5 || mContractStatus == 8 || mContractStatus == 9) {
+            if (mContractStatus == 13 || mContractStatus == 14 || mContractStatus == 15) {
                 canApprove = true
                 canChooseReviewer = false
             }
@@ -193,8 +192,8 @@ class ActDocumentViewer : ActBase(),
             dialogExtra()
         }
 
-        if ((canApprove) or (mUserRole == 5)) {
-            if (mContractId != -1 && (mContractStatus == 0 || mContractStatus == 8)) {
+        if ((canApprove) or (mUserRole == 5) or (canChooseReviewer)) {
+            if (mContractId != -1 && mContractStatus == 0) {
                 changeStatusContract(1, "", false)
             }
         }
@@ -319,14 +318,10 @@ class ActDocumentViewer : ActBase(),
                 }
             }
             //jika contract masih pending diperlukan aksi
-            else if ((mContractStatus <= 1) or (mContractStatus == 6) or (mContractStatus == 8) or (mContractStatus == 9)) {
+            else if (mContractStatus <= 1) {
                 //seleksi tombol antara (approve dan reject) atau (sign)
                 if (canApprove) { //seleksi aksi yang sesuai untuk contract
-                    if (mContractStatus <= 1 || mContractStatus == 8 || mContractStatus == 9) {
-                        InitApprover("Staff", "Request", 0)                                                      //selain vendor dan officer bisa approve tombol
-                    } else if (mContractStatus == 6) {
-                        InitApprover("Manager", "Request", 0)          //selain vendor dan officer bisa approve tombol
-                    }
+                    InitApprover("Staff", "Request", 0)
                 } else if (canChooseReviewer) {
                     cekContractReviewer()
                 } else {
@@ -340,13 +335,7 @@ class ActDocumentViewer : ActBase(),
                     if (mContractStatus == 2) {
                         fabReject.isEnabled = false
                         InitApprover("Staff", "Reject", 0)
-                    } else if (mContractStatus == 10) {
-                        fabReject.isEnabled = false
-                        InitApprover("Staff", "Reject", 0)
-                    } else if (mContractStatus == 3 || mContractStatus == 11) {
-                        fabApprove.isEnabled = false
-                        InitApprover("Staff", "Approve", 0)
-                    } else if (mContractStatus == 4 || mContractStatus == 12) {
+                    } else if (mContractStatus == 4) {
                         if ((mUserRole == 39) or (mUserRole == 40) or (mUserRole == 33) or (mUserRole == 3) or ((mUserRole >= 22) and (mUserRole <= 32) or (mUserRole == 34) or (mUserRole == 35))){
                             fabReject.isEnabled = true
                             fabApprove.isEnabled = true
@@ -360,9 +349,12 @@ class ActDocumentViewer : ActBase(),
                             fabReject.isEnabled = false
                             InitApprover("Manager", "Reject", 0)
                         }
-                    } else if (mContractStatus == 5 || mContractStatus == 13){
-                        fabApprove.isEnabled = false
-                        InitApprover("Staff", "Approve", 0)
+                    }
+                    else if (mContractStatus == 13) {
+                        InitApprover("Manager", "Request", 0)
+                    }
+                    else if (mContractStatus == 14) {
+                        InitApprover("Manager", "Reject", 0)
                     }
                     else {
                         layoutFabApprove.visibility = View.VISIBLE
@@ -411,11 +403,7 @@ class ActDocumentViewer : ActBase(),
 
     //fungsi hanya jika bisa approve
     private fun InitApprover(requestRole: String, requestShowing : String, requestType : Int) {
-        if (requestShowing == "Approve"){
-            layoutFabApprove.visibility = View.VISIBLE
-            layoutFabReject.visibility = View.GONE
-            tvApprove.text = "Approved"
-        } else if (requestShowing == "Reject"){
+        if (requestShowing == "Reject"){
             layoutFabApprove.visibility = View.GONE
             layoutFabReject.visibility = View.VISIBLE
             tvReject.text = "Rejected"
@@ -1094,12 +1082,6 @@ class ActDocumentViewer : ActBase(),
         body["id_user"] = mUserId.toString()
         body["id_contract"] = mContractId.toString()
         body["user_status"] = currentStatus.toString()
-        if(mContractStatus == 8 || mContractStatus == 9){
-            body["requestReviewer"] = "2"
-        }
-        else{
-            body["requestReviewer"] = "1"
-        }
         body["note"] = note
 
         disposable = service.setReadStatus(body)
@@ -1115,15 +1097,12 @@ class ActDocumentViewer : ActBase(),
                     val obj = JSONObject(result.string())
                     val response = obj.getInt("response")
                     if (response == 1) {
-                        if(mContractStatus == 8 || mContractStatus == 9){
-                            if (currentStatus == 2){
-                                mContractStatus = 10
-                            }
-                            else if (currentStatus == 3){
-                                mContractStatus = 11
-                            }
-                        }
-                        else{
+
+                        if(currentStatus == 5){
+                            mContractStatus = 15
+                        } else if(currentStatus == 4){
+                            mContractStatus = 14
+                        } else{
                             mContractStatus = currentStatus
                         }
 
@@ -1183,15 +1162,15 @@ class ActDocumentViewer : ActBase(),
         btOk?.setOnClickListener {
             dialog?.dismiss()
 
-            if(mContractStatus == 10){
+            if(mContractStatus == 15){
                 val intent = intent
                 finish()
-                intent.putExtra("DOC_STATUS", 10)
+                intent.putExtra("DOC_STATUS", 15)
                 startActivity(intent)
-            } else if(mContractStatus == 11){
+            } else if(mContractStatus == 14){
                 val intent = intent
                 finish()
-                intent.putExtra("DOC_STATUS", 11)
+                intent.putExtra("DOC_STATUS", 14)
                 startActivity(intent)
             } else if (currentStatus == 2 || currentStatus == 3 || currentStatus == 4 || currentStatus == 5) {
                 val intent = intent
