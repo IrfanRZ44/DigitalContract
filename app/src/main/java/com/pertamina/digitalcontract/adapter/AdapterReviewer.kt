@@ -199,7 +199,7 @@ class AdapterReviewer(
 
                     progressDialog.dismiss()
                     if (response == 1) {
-                        dialogSuccess("Berhasil memilih reviewer", dialog, context, activity)
+                        dialogSuccess("Berhasil memilih reviewer", dialog, context, activity, currentStatus)
                     }
                     else{
                         dialogFailed("Gagal memilih reviewer", dialog, context)
@@ -213,7 +213,7 @@ class AdapterReviewer(
             })
         }
 
-        fun dialogSuccess(teks: String, dialog: Dialog, context: Context, activity: Activity) {
+        fun dialogSuccess(teks: String, dialog: Dialog, context: Context, activity: Activity, status : Int) {
             dialog?.setContentView(R.layout.dialog_status)
 
             val faIcon = dialog?.findViewById<FontAwasomeTextView>(R.id.faIcon)
@@ -244,7 +244,7 @@ class AdapterReviewer(
                 val mDocTitle = activity.intent.getStringExtra("DOC_TITLE")
                 val mDocPath = activity.intent.getStringExtra("DOC_PATH")
                 val mContractId = activity.intent.getStringExtra("DOC_ID")
-                val mContractStatus = activity.intent.getIntExtra("DOC_STATUS", -1)
+                val mContractStatus = status
 
                 i.putExtra("DOC_TITLE", mDocTitle)
                 if(mDocPath != null){

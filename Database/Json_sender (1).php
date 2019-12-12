@@ -18,31 +18,63 @@ class Json_sender extends CI_Controller {
 
 
 
-    private $SLA_DELAY = 3;
+     private $SLA_DELAY = 3;
 
 
 
     private $STATUS_UNREAD = 0;
+    
+    private $STATUS_READ = 1;
 
     private $STATUS_PENDING = 1;
 
     private $STATUS_REJECTED = 2;
+    
+    private $STATUS_REJECTED_BY_MANAGER = 4;
 
     private $STATUS_APPROVED = 3;
-
-
+    
+    private $STATUS_APPROVED_BY_MANAGER = 5;
 
     private $ROLE_FINANCE = 3;
-
     private $ROLE_LEGAL = 4;
-
     private $ROLE_OFFICER = 5;
-
     private $ROLE_VENDOR = 6;
-
     private $ROLE_REVIEWER = 7;
-
-
+    private $Mgr_HC = 8;
+    private $Mgr_TSR_VII = 9;
+    private $Mgr_Industri_Marine = 10;
+    private $Mgr_Retail = 11;
+    private $Mgr_QM = 12;
+    private $Mgr_Internal_Audit = 13;
+    private $Mgr_IT_MOR_VII = 14;
+    private $Mgr_Marine_Region_VII = 15;
+    private $Mgr_Domgas_Region_VII = 16;
+    private $Mgr_Aviation_Region_VII = 17;
+    private $Mgr_S_dan_D_Region_VII = 18;
+    private $Mgr_HSSE_MOR_VII = 19;
+    private $Mgr_Assets_Management_MOR_VII = 20;
+    private $Mgr_Medical_Sulawesi = 21;
+    private $Staf_HC = 22;
+    private $Staf_TSR_VII = 23;
+    private $Staf_Industri_Marine = 24;
+    private $Staf_Retail = 25;
+    private $Staf_QM = 26;
+    private $Staf_Internal_Audit = 27;
+    private $Staf_IT_MOR_VII = 28;
+    private $Staf_Marine_Region_VII = 29;
+    private $Staf_Domgas_Region_VII = 30;
+    private $Staf_Avigation_Region_VII = 31;
+    private $Staf_S_dan_D_Region_VII = 32;
+    private $Staf_HSSE_MOR_VII = 33;
+    private $Staf_Asset_Management_MOR_VII = 34;
+    private $Staf_Medical_Sulawesi = 35;
+    private $Reviewer_Vendor = 36;
+    private $Mgr_Finance = 37;
+    private $Mgr_Legal = 38;
+    private $Staf_Finance = 39;
+    private $Staf_Legal = 40;
+    private $Mgr_Procurement = 41;
 
     public function __construct() {
 
@@ -64,31 +96,61 @@ class Json_sender extends CI_Controller {
 
     }
 
+    function cekUser(){
+          //$id_contract = $this->input->get('id_contract');
+
+          $host = "localhost";
+          $user = "mor7com_digitalcontractv3";
+          $password = "mor7com_digitalcontractv3";
+          $namaDb = "mor7com_digitalcontractv3";
+          $kon = mysqli_connect($host, $user, $password, $namaDb);
+
+        $result = mysqli_query($kon, "SELECT * FROM `user`");
+
+          while ($row = mysqli_fetch_array($result)) {
+               
+              echo "Username : ".$row['USERNAME']."___";
+              echo "User Role : ".$row['USER_ROLE']."\n";
+             
+          }
+
+    }
+    
+    function publishContract(){
+          $content = trim(file_get_contents("php://input"));
+          $decoded = json_decode($content);
+          $id_contract = $decoded->id_contract;
+          $publish = $decoded->publish;
+
+          $host = "localhost";
+          $user = "mor7com_digitalcontractv3";
+          $password = "mor7com_digitalcontractv3";
+          $namaDb = "mor7com_digitalcontractv3";
+          $kon = mysqli_connect($host, $user, $password, $namaDb);
+
+        $result = mysqli_query($kon, "UPDATE `tr_contract` SET `PUBLISHED` = $publish WHERE `tr_contract`.`CONTRACT_ID` = $id_contract");
+        
+        if($result){
+            echo "Success";
+        }
+        else{
+            echo "Failed";
+        }
+
+    }
 
 
     function get_contract() {
 
-        $user_id = $this->input->get('id');
+        // $this->cekUser();
 
-        $status = $this->input->get('status');
+        $content = trim(file_get_contents("php://input"));
 
-        if (!$status) $status = -1;
+        $decoded = json_decode($content);
 
-        if ($user_id == '') {
+        $user_id = $decoded->id_user;
 
-            $content = trim(file_get_contents("php://input"));
-
-            $decoded = json_decode($content);
-
-            $user_id = $decoded->id_user;
-
-            if (isset($decoded->status)) {
-
-                $status = $decoded->status;
-
-            }
-
-        }
+        $status = $decoded->status;
 
 
 
@@ -107,36 +169,35 @@ class Json_sender extends CI_Controller {
         $search_array = array();
 
 
-
         switch ($role_user) {
 
-            case $this->ROLE_REVIEWER:
+           case $this->ROLE_REVIEWER:
 
-                if ($status < $this->STATUS_UNREAD) {
+            if ($status < $this->STATUS_UNREAD) {
 
-                    $search_array = array(
+                $search_array = array(
+    
+                    'reviewer_id' => $user_id,
 
-                        'reviewer_id' => $user_id,
+                    'published' => 1,
 
-                        'published' => 1,
+                );
 
-                    );
+            } else {
 
-                } else {
+                $search_array = array(
 
-                    $search_array = array(
+                    'reviewer_id' => $user_id,
 
-                        'reviewer_id' => $user_id,
+                    'reviewer_status' => $status,
 
-                        'reviewer_status' => $status,
+                    'published' => 1,
 
-                        'published' => 1,
+                );
 
-                    );
-
-                }
-
-                break;
+            }
+            
+            break;
 
             case $this->ROLE_FINANCE:
 
@@ -201,10 +262,16 @@ class Json_sender extends CI_Controller {
                     $search_array = array(
 
                         'vendor_id' => $user_id,
+                        
+                        'officer_certificate' => $this->STATUS_APPROVED,
 
-                        'finance_status' => $this->STATUS_APPROVED,
+                        'finance_status' => $this->STATUS_APPROVED_BY_MANAGER,
 
-                        'legal_status' => $this->STATUS_APPROVED,
+                        'legal_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'hsse_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'reviewer_status' => $this->STATUS_APPROVED_BY_MANAGER,
 
                         'published' => 1,
 
@@ -215,10 +282,16 @@ class Json_sender extends CI_Controller {
                     $search_array = array(
 
                         'vendor_id' => $user_id,
+                        
+                        'officer_certificate' => $this->STATUS_APPROVED,
 
-                        'finance_status' => $this->STATUS_APPROVED,
+                        'finance_status' => $this->STATUS_APPROVED_BY_MANAGER,
 
-                        'legal_status' => $this->STATUS_APPROVED,
+                        'legal_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'hsse_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'reviewer_status' => $this->STATUS_APPROVED_BY_MANAGER,
 
                         'vendor_certificate' => $status,
 
@@ -231,60 +304,767 @@ class Json_sender extends CI_Controller {
                 break;
 
             case $this->ROLE_OFFICER:
-
-                if ($status < $this->STATUS_UNREAD) {
+                if ($status == $this->STATUS_UNREAD) {
 
                     $search_array = array(
 
+                        'vendor_certificate' => $this->STATUS_APPROVED,
+                        
+                        'officer_certificate' => $this->STATUS_UNREAD,
+                        
+                        'finance_status' => $this->STATUS_APPROVED_BY_MANAGER,
+
+                        'legal_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'hsse_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'reviewer_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
                         'officer_id' => $user_id,
 
-                        'finance_status' => $this->STATUS_APPROVED,
+                        'published' => 1,
 
-                        'legal_status' => $this->STATUS_APPROVED,
+                    );
+                    
+                    $this->M_contract->fields = array("CONTRACT_ID", "CONTRACT_TITLE", "CREATED_ON", "LEGAL_STATUS", "REVIEWER_STATUS", "REVIEWER_STATUS_2", "FINANCE_STATUS", "VENDOR_SIGNATURE", "VENDOR_CERTIFICATE", "OFFICER_SIGNATURE", "OFFICER_CERTIFICATE", "PDF_PATH", "LEGAL_ID", "FINANCE_ID", "HSSE_ID", "HSSE_STATUS", "FUNGSI_ID", "REVIEWER_ID", "REVIEWER_ID_2", "PUBLISHED");
+
+                    $contract = $this->M_contract->search($search_array)->result();
+                    
+                    $this->set_api_log('get_contract', $user_id, 1);
+                    
+                    echo json_encode(array("response" => $contract));
+
+                } else if ($status == $this->STATUS_READ) {
+
+                    $search_array = array(
 
                         'vendor_certificate' => $this->STATUS_APPROVED,
+                        
+                        'officer_certificate' => $this->STATUS_READ,
+                        
+                        'finance_status' => $this->STATUS_APPROVED_BY_MANAGER,
+
+                        'legal_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'hsse_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'reviewer_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'officer_id' => $user_id,
+
+                        'published' => 1,
+
+                    );
+                    
+                    $this->M_contract->fields = array("CONTRACT_ID", "CONTRACT_TITLE", "CREATED_ON", "LEGAL_STATUS", "REVIEWER_STATUS", "REVIEWER_STATUS_2", "FINANCE_STATUS", "VENDOR_SIGNATURE", "VENDOR_CERTIFICATE", "OFFICER_SIGNATURE", "OFFICER_CERTIFICATE", "PDF_PATH", "LEGAL_ID", "FINANCE_ID", "HSSE_ID", "HSSE_STATUS", "FUNGSI_ID", "REVIEWER_ID",  "REVIEWER_ID_2","PUBLISHED");
+
+                    $contract = $this->M_contract->search($search_array)->result();
+                    
+                    $this->set_api_log('get_contract', $user_id, 1);
+                    
+                    echo json_encode(array("response" => $contract));
+
+                } else if ($status == $this->STATUS_APPROVED) {
+
+                    $search_array = array(
+
+                        'vendor_certificate' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'officer_certificate' => $this->STATUS_APPROVED,
+                        
+                        'finance_status' => $this->STATUS_APPROVED_BY_MANAGER,
+
+                        'legal_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'hsse_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'reviewer_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'officer_id' => $user_id,
+
+                        'published' => 1,
+
+                    );
+                    
+                    $this->M_contract->fields = array("CONTRACT_ID", "CONTRACT_TITLE", "CREATED_ON", "LEGAL_STATUS", "REVIEWER_STATUS", "REVIEWER_STATUS_2", "FINANCE_STATUS", "VENDOR_SIGNATURE", "VENDOR_CERTIFICATE", "OFFICER_SIGNATURE", "OFFICER_CERTIFICATE", "PDF_PATH", "LEGAL_ID", "FINANCE_ID", "HSSE_ID", "HSSE_STATUS", "FUNGSI_ID", "REVIEWER_ID", "REVIEWER_ID_2", "PUBLISHED");
+
+                    $contract = $this->M_contract->search($search_array)->result();
+                    
+                    $this->set_api_log('get_contract', $user_id, 1);
+                    
+                    echo json_encode(array("response" => $contract));
+
+                }
+                else {
+
+                    $search_array = array(
+
+                        'vendor_certificate' => $this->STATUS_APPROVED,
+                        
+                        'finance_status' => $this->STATUS_APPROVED_BY_MANAGER,
+
+                        'legal_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'hsse_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'reviewer_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'officer_id' => $user_id,
 
                         'published' => 1,
 
                     );
 
-                } else {
+                    $search_array_vendor = array(
 
-                    $search_array = array(
+                        'vendor_certificate' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'finance_status' => $this->STATUS_APPROVED_BY_MANAGER,
 
+                        'legal_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'hsse_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'reviewer_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
                         'officer_id' => $user_id,
-
-                        'finance_status' => $this->STATUS_APPROVED,
-
-                        'legal_status' => $this->STATUS_APPROVED,
-
-                        'vendor_certificate' => $this->STATUS_APPROVED,
-
-                        'officer_certificate' => $status,
 
                         'published' => 1,
 
                     );
 
+                    $this->M_contract->fields = array("CONTRACT_ID", "CONTRACT_TITLE", "CREATED_ON", "LEGAL_STATUS", "REVIEWER_STATUS", "REVIEWER_STATUS_2", "FINANCE_STATUS", "VENDOR_SIGNATURE", "VENDOR_CERTIFICATE", "OFFICER_SIGNATURE", "OFFICER_CERTIFICATE", "PDF_PATH", "LEGAL_ID", "FINANCE_ID", "HSSE_ID", "HSSE_STATUS", "FUNGSI_ID", "REVIEWER_ID", "REVIEWER_ID_2", "PUBLISHED");
+
+                    $contract = $this->M_contract->search($search_array)->result();
+                
+                    $contract_vendor = $this->M_contract->search($search_array_vendor)->result();
+                    
+                    for ($a = 0; $a < sizeof($contract_vendor); $a++){
+                        array_push($contract, $contract_vendor[$a]);
+                    }
+                
+                    $this->set_api_log('get_contract', $user_id, 1);
+                
+                    echo json_encode(array("response" => $contract));
+                }
+                
+                exit();
+                break;
+            case $this->Mgr_Procurement:
+                
+                if ($status <= $this->STATUS_UNREAD){
+                    $search_array = array(
+                        
+                        'published' => 0
+
+                    );  
+                }
+                else if ($status <= $this->STATUS_READ){
+                    $search_array = array(
+                        
+                        'published' => 1
+
+                    );  
+                }
+                else{
+                    $search_array = array(
+                        'published' => 0
+                    );
                 }
 
                 break;
+            case $this->Mgr_Finance:
+                
+                if ($status == $this->STATUS_UNREAD) {
+                    $search_array = array(
+                        
+                        'published' => 1,
+                        
+                        'finance_id' => "0"
 
+                    );
+                }
+                else if ($status == $this->STATUS_READ) {
+                    $search_array = array(
+                        
+                        'published' => 1,
+                        
+                        'finance_status' => "1"
+
+                    );
+                }
+                else if ($status == $this->STATUS_REJECTED) {
+                    $search_array = array(
+                        
+                        'published' => 1,
+                        
+                        'finance_status' => "4"
+
+                    );
+                }
+                else if ($status == $this->STATUS_APPROVED) {
+                    $search_array = array(
+                        
+                        'published' => 1,
+                        
+                        'finance_status' => "5"
+
+                    );
+                }
+                else{
+                    $search_array = array(
+                        
+                        'published' => 1
+
+                    );
+                }
+
+                break;
+            case $this->Mgr_Legal:
+                if ($status == $this->STATUS_UNREAD) {
+                    $search_array = array(
+                        
+                        'published' => 1,
+                        
+                        'legal_id' => "0"
+
+                    );
+                }
+                else if ($status == $this->STATUS_READ) {
+                    $search_array = array(
+                        
+                        'published' => 1,
+                        
+                        'legal_status' => "1"
+
+                    );
+                }
+                else if ($status == $this->STATUS_REJECTED) {
+                    $search_array = array(
+                        
+                        'published' => 1,
+                        
+                        'legal_status' => "4"
+
+                    );
+                }
+                else if ($status == $this->STATUS_APPROVED) {
+                    $search_array = array(
+                        
+                        'published' => 1,
+                        
+                        'legal_status' => "5"
+
+                    );
+                }
+                else{
+                    
+                    $search_array = array(
+                        
+                        'published' => 1
+
+                    );
+                }
+                
+                break;
+            case $this->Mgr_HSSE_MOR_VII:
+
+                if ($status == $this->STATUS_UNREAD) {
+                    $search_array = array(
+                        
+                        'published' => 1,
+                        
+                        'hsse_id' => "0"
+
+                    );
+                }
+                else if ($status == $this->STATUS_READ) {
+                    $search_array = array(
+                        
+                        'published' => 1,
+                        
+                        'hsse_status' => "1"
+
+                    );
+                }
+                else if ($status == $this->STATUS_REJECTED) {
+                    $search_array = array(
+                        
+                        'published' => 1,
+                        
+                        'hsse_status' => "4"
+
+                    );
+                }
+                else if ($status == $this->STATUS_APPROVED) {
+                    $search_array = array(
+                        
+                        'published' => 1,
+                        
+                        'hsse_status' => "5"
+
+                    );
+                }
+                else{
+                    $search_array = array(
+                        
+                        'published' => 1
+
+                    );
+                }
+
+                break;
+            case $this->Staf_Finance:
+                if ($status == $this->STATUS_UNREAD) {
+                    $search_array = array(
+                        
+                        'finance_id' => $user_id,
+                        
+                        'finance_status' => "0",
+
+                        'published' => 1
+
+                    );
+                }
+                else if ($status == $this->STATUS_READ) {
+                    $search_array = array(
+                        
+                        'finance_id' => $user_id,
+                        
+                        'finance_status' => "1",
+
+                        'published' => 1
+
+                    );
+                }
+                else if ($status == $this->STATUS_REJECTED) {
+                    $search_array = array(
+                        
+                        'finance_id' => $user_id,
+                        
+                        'finance_status' => "2",
+
+                        'published' => 1
+
+                    );
+                }
+                else if ($status == $this->STATUS_APPROVED) {
+                    $search_array = array(
+
+                        'finance_id' => $user_id,
+                        
+                        'finance_status' => "3",
+
+                        'published' => 1
+
+                    );
+                }
+                else{
+                    $search_array = array(
+
+                        'finance_id' => $user_id,
+
+                        'published' => 1
+
+                    );
+                }
+
+                break;
+            case $this->Staf_Legal:
+                if ($status == $this->STATUS_UNREAD) {
+                    $search_array = array(
+                        
+                        'legal_id' => $user_id,
+                        
+                        'legal_status' => "0",
+
+                        'published' => 1
+
+                    );
+                }
+                else if ($status == $this->STATUS_READ) {
+                    $search_array = array(
+                        
+                        'legal_id' => $user_id,
+                        
+                        'legal_status' => "1",
+
+                        'published' => 1
+
+                    );
+                }
+                else if ($status == $this->STATUS_REJECTED) {
+                    $search_array = array(
+                        
+                        'legal_id' => $user_id,
+                        
+                        'legal_status' => "2",
+
+                        'published' => 1
+
+                    );
+                }
+                else if ($status == $this->STATUS_APPROVED) {
+                    $search_array = array(
+
+                        'legal_id' => $user_id,
+                        
+                        'legal_status' => "3",
+
+                        'published' => 1
+
+                    );
+                }
+                else{
+                    $search_array = array(
+
+                        'legal_id' => $user_id,
+
+                        'published' => 1
+
+                    );
+                }
+
+                break;
+            case $this->Staf_HSSE_MOR_VII:
+                
+                if ($status == $this->STATUS_UNREAD) {
+                    $search_array = array(
+                        
+                        'hsse_id' => $user_id,
+                        
+                        'hsse_status' => "0",
+                        
+                        'published' => 1
+
+                    );
+                }
+                else if ($status == $this->STATUS_READ) {
+                    $search_array = array(
+                        
+                        'hsse_id' => $user_id,
+                        
+                        'hsse_status' => "1",
+                        
+                        'published' => 1
+
+                    );
+                }
+                else if ($status == $this->STATUS_REJECTED) {
+                    $search_array = array(
+                        
+                        'hsse_id' => $user_id,
+                        
+                        'hsse_status' => "2",
+                        
+                        'published' => 1
+
+                    );
+                }
+                else if ($status == $this->STATUS_APPROVED) {
+                    $search_array = array(
+                        'hsse_id' => $user_id,
+                        
+                        'hsse_status' => "3",
+                        
+                        'published' => 1
+
+                    );
+                }
+                else{
+                    $search_array = array(
+
+                        'hsse_id' => $user_id,
+
+                        'published' => 1
+
+                    );
+                }
+
+                break;
+            case $this->Reviewer_Vendor:
+                
+                if ($status == $this->STATUS_UNREAD) {
+                    $search_array = array(
+                        
+                        'hsse_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'legal_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'finance_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'reviewer_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'VENDOR_CERTIFICATE' => "0",
+
+                        'published' => 1
+
+                    );
+                }
+                else if ($status == $this->STATUS_READ) {
+                    $search_array = array(
+                        
+                        'hsse_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'legal_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'finance_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'reviewer_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'VENDOR_CERTIFICATE' => "1",
+
+                        'published' => 1
+
+                    );
+                }
+                else if ($status == $this->STATUS_REJECTED) {
+                    $search_array = array(
+                        
+                        'hsse_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'legal_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'finance_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'reviewer_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'VENDOR_CERTIFICATE' => "2",
+
+                        'published' => 1
+
+                    );
+                }
+                else if ($status == $this->STATUS_APPROVED) {
+                    $search_array = array(
+                        
+                        'hsse_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'legal_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'finance_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'reviewer_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'VENDOR_CERTIFICATE' => "3",
+
+                        'published' => 1
+
+                    );
+                }
+                else{
+
+                    $search_array = array(
+
+                        'hsse_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'legal_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'finance_status' => $this->STATUS_APPROVED_BY_MANAGER,
+                        
+                        'reviewer_status' => $this->STATUS_APPROVED_BY_MANAGER,
+
+                        'published' => 1
+
+                    );
+                }
+
+                break;
             default:
+                if (($role_user >= 8) && ($role_user <= 18) || $role_user == 20 || $role_user == 21 ){
+                    
+                    if ($status == $this->STATUS_UNREAD) {
+                        $search_array = array(
+                            
+                            'fungsi_id' => $role_user,
+                            
+                            'published' => 1,
+                        
+                            'reviewer_id' => "0"
 
-                echo json_encode(array("response" => -1));
+                        );
+                    }
+                    else if ($status == $this->STATUS_READ) {
+                        $search_array = array(
+                        
+                            'published' => 1,
+                        
+                            'reviewer_status' => "1"
 
-                exit();
+                        );
+                    }
+                    else if ($status == $this->STATUS_REJECTED) {
+                        $search_array = array(
+                    
+                            'fungsi_id' => $role_user,
+                            
+                            'published' => 1,
+                        
+                            'reviewer_status' => "4"
 
+                        );
+                    }
+                    else if ($status == $this->STATUS_APPROVED) {
+                        $search_array = array(
+
+                            'fungsi_id' => $role_user,                        
+                            
+                            'published' => 1,
+                        
+                            'reviewer_status' => "5"
+
+                        );
+                    }
+                    else{
+                        $search_array = array(
+                        
+                            'fungsi_id' => $role_user,
+                        
+                            'published' => 1
+
+                        );
+                    }
+                
+                }
+                else if (($role_user >= 22) && ($role_user <= 32) || $role_user == 34 || $role_user == 35){
+                    if ($status == $this->STATUS_UNREAD) {
+                        $search_array = array(
+                            'reviewer_id' => $user_id,
+
+                            'published' => 1,
+                        
+                            'reviewer_status' => "0"
+
+                        );
+                    }
+                    else if ($status == $this->STATUS_READ) {
+                        $search_array = array(
+                        
+                            'reviewer_id' => $user_id,
+
+                            'published' => 1,
+                        
+                            'reviewer_status' => "1"
+
+                        );
+                    }
+                    else if ($status == $this->STATUS_REJECTED) {
+                        $search_array = array(
+                    
+                            'reviewer_id' => $user_id,
+
+                            'published' => 1,
+                        
+                            'reviewer_status' => "2"
+
+                        );
+                    }
+                    else if ($status == $this->STATUS_APPROVED) {
+                        $search_array = array(
+
+                            'reviewer_id' => $user_id,
+
+                            'published' => 1,
+                        
+                            'reviewer_status' => "3"
+
+                        );
+                    }
+                    else{
+                        $search_array = array(
+
+                            'reviewer_id' => $user_id,
+
+                            'published' => 1
+
+                         );
+                    }
+                    
+
+                    if ($status == $this->STATUS_UNREAD) {
+                        $search_array_2 = array(
+                            'reviewer_id_2' => $user_id,
+
+                            'published' => 1,
+                        
+                            'reviewer_status_2' => "0"
+
+                        );
+                    }
+                    else if ($status == $this->STATUS_READ) {
+                        $search_array_2 = array(
+                        
+                            'reviewer_id_2' => $user_id,
+
+                            'published' => 1,
+                        
+                            'reviewer_status_2' => "1"
+
+                        );
+                    }
+                    else if ($status == $this->STATUS_REJECTED) {
+                        $search_array_2 = array(
+                    
+                            'reviewer_id_2' => $user_id,
+
+                            'published' => 1,
+                        
+                            'reviewer_status_2' => "2"
+
+                        );
+                    }
+                    else if ($status == $this->STATUS_APPROVED) {
+                        $search_array_2 = array(
+
+                            'reviewer_id_2' => $user_id,
+
+                            'published' => 1,
+                        
+                            'reviewer_status_2' => "3"
+
+                        );
+                    }
+                    else{
+                        $search_array_2 = array(
+
+                            'reviewer_id_2' => $user_id,
+
+                            'published' => 1
+
+                         );
+                    }
+                    
+                    $this->M_contract->fields = array("CONTRACT_ID", "CONTRACT_TITLE", "CREATED_ON", "LEGAL_STATUS", "REVIEWER_STATUS", "REVIEWER_STATUS_2", "FINANCE_STATUS", "VENDOR_SIGNATURE", "VENDOR_CERTIFICATE", "OFFICER_SIGNATURE", "OFFICER_CERTIFICATE", "PDF_PATH", "LEGAL_ID", "FINANCE_ID", "HSSE_ID", "HSSE_STATUS", "FUNGSI_ID", "REVIEWER_ID", "REVIEWER_ID_2", "PUBLISHED");
+
+                    $contract = $this->M_contract->search($search_array)->result();
+
+                    sizeof($contract);
+                
+                    $contract_vendor = $this->M_contract->search($search_array_2)->result();
+                    
+                    for ($a = 0; $a < sizeof($contract_vendor); $a++){
+                        
+                        array_push($contract, $contract_vendor[$a]);
+                    }
+                
+                    $this->set_api_log('get_contract', $user_id, 1);
+                
+                    echo json_encode(array("response" => $contract));
+
+                    exit();
+                }
+                else{
+                    echo json_encode(array("response" => -1));
+
+                    exit();
+                }
         }
 
-
-
-        $this->M_contract->fields = array("CONTRACT_ID", "CONTRACT_TITLE", "CREATED_ON", "LEGAL_STATUS", "REVIEWER_STATUS", "FINANCE_STATUS", "VENDOR_SIGNATURE", "VENDOR_CERTIFICATE", "OFFICER_SIGNATURE", "OFFICER_CERTIFICATE");
+        $this->M_contract->fields = array("CONTRACT_ID", "CONTRACT_TITLE", "CREATED_ON", "LEGAL_STATUS", "REVIEWER_STATUS", "REVIEWER_STATUS_2"
+        , "FINANCE_STATUS", "VENDOR_SIGNATURE", "VENDOR_CERTIFICATE", "OFFICER_SIGNATURE", "OFFICER_CERTIFICATE", "PDF_PATH"
+        , "LEGAL_ID", "FINANCE_ID", "HSSE_ID", "HSSE_STATUS", "FUNGSI_ID", "REVIEWER_ID",  "REVIEWER_ID_2","PUBLISHED");
 
         $contract = $this->M_contract->search($search_array)->result();
-
-
 
         $this->set_api_log('get_contract', $user_id, 1);
 
@@ -423,8 +1203,6 @@ class Json_sender extends CI_Controller {
 
         $date = date('Y-m-d H:i:s');
 
-
-
         switch ($role) {
 
             case $this->ROLE_REVIEWER:
@@ -539,8 +1317,6 @@ class Json_sender extends CI_Controller {
 
             case $this->ROLE_OFFICER:
 
-                if ($data_contract->OFFICER_CERTIFICATE < $this->STATUS_APPROVED) {
-
                     $data = array(
 
                         "officer_certificate" => $param1,
@@ -549,8 +1325,156 @@ class Json_sender extends CI_Controller {
 
                     );
 
+                break;
+            case $this->Mgr_Legal:
+                
+                if ($data_contract->LEGAL_STATUS == $this->STATUS_APPROVED) {
+                    
+                    $param2 = $data_contract->LEGAL_NOTE."Manager = ".$date." = ".$param2."\n";
+                    
+                    $data = array(
+
+                        "LEGAL_STATUS" => $param1,
+                        
+                        "LEGAL_NOTE" => $param2
+
+                    );
+
                 }
 
+                break;
+            case $this->Mgr_Finance:
+                
+                if ($data_contract->FINANCE_STATUS == $this->STATUS_APPROVED) {
+                    
+                    $param2 = $data_contract->FINANCE_NOTE."Manager = ".$date." = ".$param2."\n";
+                    
+                    $data = array(
+
+                        "FINANCE_STATUS" => $param1,
+                        
+                        "FINANCE_NOTE" => $param2
+
+                    );
+
+                }
+
+                break;
+            case $this-> Mgr_HSSE_MOR_VII:
+                
+                if ($data_contract->HSSE_STATUS == $this->STATUS_APPROVED) {
+                    
+                    $param2 = $data_contract->HSSE_NOTE."Manager = ".$date." = ".$param2."\n";
+                    
+                    $data = array(
+
+                        "HSSE_STATUS" => $param1,
+                        
+                        "HSSE_NOTE" => $param2
+
+                    );
+
+                }
+
+                break;
+            case $this->Staf_Finance:
+
+                if (($data_contract->FINANCE_STATUS < $this->STATUS_APPROVED) || ($data_contract->FINANCE_STATUS == $this->STATUS_REJECTED_BY_MANAGER)) {
+                    
+                    $param2 = $data_contract->FINANCE_NOTE."Staff = ".$date." = ".$param2."\n";
+                    
+                    $data = array(
+
+                        "FINANCE_STATUS" => $param1,
+                        
+                        "FINANCE_NOTE" => $param2
+
+                    );
+
+                }
+
+                break;
+             case $this->Staf_Legal:
+                
+                if ($data_contract->LEGAL_STATUS < $this->STATUS_APPROVED || $data_contract->LEGAL_STATUS == $this->STATUS_REJECTED_BY_MANAGER) {
+                    
+                    $param2 = $data_contract->LEGAL_NOTE."Staff = ".$date." = ".$param2."\n";
+                    
+                    $data = array(
+
+                        "LEGAL_STATUS" => $param1,
+                        
+                        "LEGAL_NOTE" => $param2
+
+                    );
+
+                }
+
+                break;
+             case $this->Staf_HSSE_MOR_VII:
+
+                if ($data_contract->HSSE_STATUS < $this->STATUS_APPROVED || $data_contract->HSSE_STATUS == $this->STATUS_REJECTED_BY_MANAGER) {
+                    
+                    $param2 = $data_contract->HSSE_NOTE."Staff = ".$date." = ".$param2."\n";
+                    
+                    $data = array(
+
+                        "HSSE_STATUS" => $param1,
+                        
+                        "HSSE_NOTE" => $param2
+
+                    );
+
+                }
+
+                break;
+            case $this->Reviewer_Vendor:
+
+                if ($data_contract->VENDOR_CERTIFICATE < $this->STATUS_APPROVED) {
+                    
+                    // $param2 = $data_contract->HSSE_NOTE."Staff = ".$date." = ".$param2."\n";
+                    
+                    $data = array(
+
+                        "VENDOR_CERTIFICATE" => $param1
+
+                    );
+
+                }
+
+                break;
+            default :
+                if (($role >= 22) && ($role <= 32) || ($role == 34) || ($role == 35)){
+                    
+                    if ($data_contract->REVIEWER_STATUS < $this->STATUS_APPROVED || $data_contract->REVIEWER_STATUS == $this->STATUS_REJECTED_BY_MANAGER) {
+                    
+                            $param2 = $data_contract->REVIEWER_NOTE."Staff = ".$date." = ".$param2."\n";
+                    
+                            $data = array(
+                            
+                            "REVIEWER_STATUS" => $param1,
+
+                            "REVIEWER_NOTE" => $param2
+                            
+                        );
+                    
+                    }
+                }
+                else if (($role >= 8) && ($role <= 18) || ($role == 20) || ($role == 21)){
+                    
+                    if ($data_contract->REVIEWER_STATUS == $this->STATUS_APPROVED) {
+                        
+                            $param2 = $data_contract->REVIEWER_NOTE."Manager = ".$date." = ".$param2."\n";
+                    
+                            $data = array(
+                        
+                            "REVIEWER_STATUS" => $param1,
+    
+                            "REVIEWER_NOTE" => $param2
+                        );
+                    
+                    }
+                }
                 break;
 
         }
@@ -562,6 +1486,33 @@ class Json_sender extends CI_Controller {
         $this->set_api_log('set_status', $user_id, 1);
 
         echo json_encode(array("response" => $this->db->affected_rows()));
+
+    }
+    
+    function getLogContract(){
+            $content = trim(file_get_contents("php://input"));
+            $decoded = json_decode($content);   
+            $id_request = $decoded->id_request;
+            $id_contract = $decoded->id_contract;
+
+            $host = "localhost";
+            $user = "mor7com_digitalcontractv3";
+            $password = "mor7com_digitalcontractv3";
+            $namaDb = "mor7com_digitalcontractv3";
+            $kon = mysqli_connect($host, $user, $password, $namaDb);
+
+            $result = mysqli_query($kon, "SELECT $id_request FROM `tr_contract` WHERE `tr_contract`.`CONTRACT_ID` = $id_contract");
+            
+            if ($result){
+                while ($row = mysqli_fetch_array($result)) {
+             //   $data = array($id_request=>);
+             
+                    echo $row[$id_request];
+                }
+            }
+            else{
+                echo "Error";
+            }
 
     }
 
@@ -2420,7 +3371,6 @@ class Json_sender extends CI_Controller {
     OkIIuQlM6Agh5CYwoSOEkJvAhI4QQm7i/wH6W5fQ6p0hAgAAAABJRU5ErkJggg==
 
     ';
-
 
 
 }

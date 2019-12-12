@@ -116,22 +116,22 @@ class AdapterContract(
                 if (items?.MGR_FINANCE_STATUS == "") {
                     myStatus = 0
                 } else {
-                    if (items?.FINANCE_ID == "0"){
+                    if (items?.FINANCE_ID == "0") {
                         myStatus = items.MGR_FINANCE_STATUS?.toInt() ?: 0
-                    }else{
-                        if (items?.FINANCE_STATUS == "0" && items?.MGR_FINANCE_STATUS == "3"){
+                    } else {
+                        if (items?.FINANCE_STATUS == "0" && items?.MGR_FINANCE_STATUS == "3") {
                             myStatus = 10
-                        }else if (items?.FINANCE_STATUS == "1" && items?.MGR_FINANCE_STATUS == "3"){
+                        } else if (items?.FINANCE_STATUS == "1" && items?.MGR_FINANCE_STATUS == "3") {
                             myStatus = 11
-                        }else if (items?.FINANCE_STATUS == "2" && items?.MGR_FINANCE_STATUS == "3"){
+                        } else if (items?.FINANCE_STATUS == "2" && items?.MGR_FINANCE_STATUS == "3") {
                             myStatus = 12
-                        }else if (items?.FINANCE_STATUS == "3" && items?.MGR_FINANCE_STATUS == "3"){
+                        } else if (items?.FINANCE_STATUS == "3" && items?.MGR_FINANCE_STATUS == "3") {
                             myStatus = 13
-                        }else if (items?.FINANCE_STATUS == "3" && items?.MGR_FINANCE_STATUS == "4"){
+                        } else if (items?.FINANCE_STATUS == "3" && items?.MGR_FINANCE_STATUS == "4") {
                             myStatus = 14
-                        }else if (items?.FINANCE_STATUS == "3" && items?.MGR_FINANCE_STATUS == "5"){
+                        } else if (items?.FINANCE_STATUS == "3" && items?.MGR_FINANCE_STATUS == "5") {
                             myStatus = 15
-                        }else{
+                        } else {
                             myStatus = 1
                         }
                     }
@@ -140,22 +140,22 @@ class AdapterContract(
                 if (items?.MGR_HSSE_STATUS == "") {
                     myStatus = 0
                 } else {
-                    if (items?.HSSE_ID == "0"){
+                    if (items?.HSSE_ID == "0") {
                         myStatus = items.MGR_HSSE_STATUS?.toInt() ?: 0
-                    }else{
-                        if (items?.HSSE_STATUS == "0" && items?.MGR_HSSE_STATUS == "3"){
+                    } else {
+                        if (items?.HSSE_STATUS == "0" && items?.MGR_HSSE_STATUS == "3") {
                             myStatus = 10
-                        }else if (items?.HSSE_STATUS == "1" && items?.MGR_HSSE_STATUS == "3"){
+                        } else if (items?.HSSE_STATUS == "1" && items?.MGR_HSSE_STATUS == "3") {
                             myStatus = 11
-                        }else if (items?.HSSE_STATUS == "2" && items?.MGR_HSSE_STATUS == "3"){
+                        } else if (items?.HSSE_STATUS == "2" && items?.MGR_HSSE_STATUS == "3") {
                             myStatus = 12
-                        }else if (items?.HSSE_STATUS == "3" && items?.MGR_HSSE_STATUS == "3"){
+                        } else if (items?.HSSE_STATUS == "3" && items?.MGR_HSSE_STATUS == "3") {
                             myStatus = 13
-                        }else if (items?.HSSE_STATUS == "3" && items?.MGR_HSSE_STATUS == "4"){
+                        } else if (items?.HSSE_STATUS == "3" && items?.MGR_HSSE_STATUS == "4") {
                             myStatus = 14
-                        }else if (items?.HSSE_STATUS == "3" && items?.MGR_HSSE_STATUS == "5"){
+                        } else if (items?.HSSE_STATUS == "3" && items?.MGR_HSSE_STATUS == "5") {
                             myStatus = 15
-                        }else{
+                        } else {
                             myStatus = 1
                         }
                     }
@@ -164,22 +164,22 @@ class AdapterContract(
                 if (items?.MGR_LEGAL_STATUS == "") {
                     myStatus = 0
                 } else {
-                    if (items?.LEGAL_ID == "0"){
+                    if (items?.LEGAL_ID == "0") {
                         myStatus = items.MGR_LEGAL_STATUS?.toInt() ?: 0
-                    }else{
-                        if (items?.LEGAL_STATUS == "0" && items?.MGR_LEGAL_STATUS == "3"){
+                    } else {
+                        if (items?.LEGAL_STATUS == "0" && items?.MGR_LEGAL_STATUS == "3") {
                             myStatus = 10
-                        }else if (items?.LEGAL_STATUS == "1" && items?.MGR_LEGAL_STATUS == "3"){
+                        } else if (items?.LEGAL_STATUS == "1" && items?.MGR_LEGAL_STATUS == "3") {
                             myStatus = 11
-                        }else if (items?.LEGAL_STATUS == "2" && items?.MGR_LEGAL_STATUS == "3"){
+                        } else if (items?.LEGAL_STATUS == "2" && items?.MGR_LEGAL_STATUS == "3") {
                             myStatus = 12
-                        }else if (items?.LEGAL_STATUS == "3" && items?.MGR_LEGAL_STATUS == "3"){
+                        } else if (items?.LEGAL_STATUS == "3" && items?.MGR_LEGAL_STATUS == "3") {
                             myStatus = 13
-                        }else if (items?.LEGAL_STATUS == "3" && items?.MGR_LEGAL_STATUS == "4"){
+                        } else if (items?.LEGAL_STATUS == "3" && items?.MGR_LEGAL_STATUS == "4") {
                             myStatus = 14
-                        }else if (items?.LEGAL_STATUS == "3" && items?.MGR_LEGAL_STATUS == "5"){
+                        } else if (items?.LEGAL_STATUS == "3" && items?.MGR_LEGAL_STATUS == "5") {
                             myStatus = 15
-                        }else{
+                        } else {
                             myStatus = 1
                         }
                     }
@@ -192,35 +192,44 @@ class AdapterContract(
                 or (mUserRole == UserRole.Mgr_S_dan_D_Region_VII) or (mUserRole == UserRole.Mgr_Assets_Management_MOR_VII)
                 or (mUserRole == UserRole.Mgr_Medical_Sulawesi)
             ) {
-                if (((items?.REVIEWER_ID == "") or (items?.REVIEWER_ID == "0")) && ((items?.REVIEWER_ID_2 == "") or (items?.REVIEWER_ID_2 == "0"))) {
+                if (items?.MGR_REVIEWER_STATUS == "") {
                     myStatus = 0
                 } else {
-                    if (items?.REVIEWER_ID_2.equals("0")){
-                        if (items?.REVIEWER_STATUS.equals("3")) {
-                            myStatus = 6
-                        } else if (items?.REVIEWER_STATUS.equals("4")) {
-                            myStatus = 4
-                        } else if (items?.REVIEWER_STATUS.equals("5")) {
-                            myStatus = 5
+                    if (items?.MGR_REVIEWER_STATUS == "3") {
+                        if (items?.REVIEWER_ID_2 != "0") {
+                            if (items?.REVIEWER_STATUS == "1" && items?.REVIEWER_STATUS_2 == "1") {
+                                myStatus = 11
+                            } else if (items?.REVIEWER_STATUS == "2" && items?.REVIEWER_STATUS_2 == "2") {
+                                myStatus = 12
+                            } else if (items?.REVIEWER_STATUS == "3" && items?.REVIEWER_STATUS_2 == "3") {
+                                myStatus = 13
+                            } else {
+                                myStatus = 11
+                            }
                         } else {
-                            myStatus = 7
+                            if (items?.REVIEWER_STATUS == "1") {
+                                myStatus = 11
+                            } else if (items?.REVIEWER_STATUS == "2") {
+                                myStatus = 12
+                            } else if (items?.REVIEWER_STATUS == "3") {
+                                myStatus = 13
+                            } else {
+                                myStatus = 11
+                            }
                         }
-                    }
-                    else{
-                        if ((items?.REVIEWER_STATUS.equals("3")) && (items?.REVIEWER_STATUS_2.equals("3"))) {
-                            myStatus = 6
-                        } else if ((items?.REVIEWER_STATUS.equals("4")) && (items?.REVIEWER_STATUS_2.equals("3"))) {
-                            myStatus = 4
-                        } else if ((items?.REVIEWER_STATUS.equals("5")) && (items?.REVIEWER_STATUS_2.equals("3"))) {
-                            myStatus = 5
-                        } else {
-                            myStatus = 7
-                        }
+                    } else if (items?.MGR_REVIEWER_STATUS == "4") {
+                        myStatus = 14
+                    } else if (items?.MGR_REVIEWER_STATUS == "5") {
+                        myStatus = 15
+                    } else {
+                        myStatus = items.MGR_REVIEWER_STATUS?.toInt() ?: 0
                     }
                 }
             } else if (mUserRole == UserRole.Reviewer_Vendor) {
                 if (items?.VENDOR_CERTIFICATE == "") {
                     myStatus = 0
+                } else if (items?.VENDOR_CERTIFICATE == "5") {
+                    myStatus = 3
                 } else {
                     myStatus = Integer.parseInt(items?.VENDOR_CERTIFICATE)
                 }
@@ -228,19 +237,43 @@ class AdapterContract(
                 if (items?.FINANCE_STATUS == "") {
                     myStatus = 0
                 } else {
-                    myStatus = Integer.parseInt(items?.FINANCE_STATUS)
+                    if (items?.FINANCE_STATUS == "3") {
+                        if (items?.MGR_FINANCE_STATUS == "4") {
+                            myStatus = 4
+                        } else {
+                            myStatus = Integer.parseInt(items?.FINANCE_STATUS)
+                        }
+                    } else {
+                        myStatus = Integer.parseInt(items?.FINANCE_STATUS)
+                    }
                 }
             } else if (mUserRole == UserRole.Staf_HSSE_MOR_VII) {
                 if (items?.HSSE_STATUS == "") {
                     myStatus = 0
                 } else {
-                    myStatus = Integer.parseInt(items?.HSSE_STATUS)
+                    if (items?.HSSE_STATUS == "3") {
+                        if (items?.MGR_HSSE_STATUS == "4") {
+                            myStatus = 4
+                        } else {
+                            myStatus = Integer.parseInt(items?.HSSE_STATUS)
+                        }
+                    } else {
+                        myStatus = Integer.parseInt(items?.HSSE_STATUS)
+                    }
                 }
             } else if (mUserRole == UserRole.Staf_Legal) {
                 if (items?.LEGAL_STATUS == "") {
                     myStatus = 0
                 } else {
-                    myStatus = Integer.parseInt(items?.LEGAL_STATUS)
+                    if (items?.LEGAL_STATUS == "3") {
+                        if (items?.MGR_LEGAL_STATUS == "4") {
+                            myStatus = 4
+                        } else {
+                            myStatus = Integer.parseInt(items?.LEGAL_STATUS)
+                        }
+                    } else {
+                        myStatus = Integer.parseInt(items?.LEGAL_STATUS)
+                    }
                 }
             } else if ((mUserRole == UserRole.Staf_HC) or (mUserRole == UserRole.Staf_TSR_VII)
                 or (mUserRole == UserRole.Staf_Industri_Marine) or (mUserRole == UserRole.Staf_Retail)
@@ -250,28 +283,24 @@ class AdapterContract(
                 or (mUserRole == UserRole.Staf_S_dan_D_Region_VII) or (mUserRole == UserRole.Staf_Asset_Management_MOR_VII)
                 or (mUserRole == UserRole.Staf_Medical_Sulawesi)
             ) {
-                if (items?.REVIEWER_ID.equals(session.id)){
+                if (items?.REVIEWER_ID.equals(session.id)) {
                     if (items?.REVIEWER_STATUS == "") {
                         myStatus = 0
                     } else {
-                        myStatus = Integer.parseInt(items?.REVIEWER_STATUS)
-                    }
-                }
-                else if (items?.REVIEWER_ID_2.equals(session.id)){
-                    if (items?.REVIEWER_STATUS_2 == "" || items?.REVIEWER_STATUS_2.equals("0")) {
-                        myStatus = 8
-                    } else if (items?.REVIEWER_STATUS_2.equals("1")) {
-                        myStatus = 9
-                    } else if (items?.REVIEWER_STATUS_2.equals("2")) {
-                        myStatus = 10
-                    } else if (items?.REVIEWER_STATUS_2.equals("3")) {
-                        if (items?.REVIEWER_STATUS.equals("4")){
-                            myStatus = 12
-                        } else if (items?.REVIEWER_STATUS.equals("5")){
-                            myStatus = 13
+                        if (items?.MGR_REVIEWER_STATUS == "4") {
+                            myStatus = 4
+                        } else {
+                            myStatus = Integer.parseInt(items?.REVIEWER_STATUS)
                         }
-                        else{
-                            myStatus = 11
+                    }
+                } else if (items?.REVIEWER_ID_2.equals(session.id)) {
+                    if (items?.REVIEWER_STATUS_2 == "" || items?.REVIEWER_STATUS_2.equals("0")) {
+                        myStatus = 0
+                    } else {
+                        if (items?.MGR_REVIEWER_STATUS == "4") {
+                            myStatus = 4
+                        } else {
+                            myStatus = Integer.parseInt(items?.REVIEWER_STATUS_2)
                         }
                     }
                 }
@@ -305,7 +334,11 @@ class AdapterContract(
                         )
                     )
                     viewColor.background =
-                        ResourcesCompat.getDrawable(itemView.resources, R.color.cpb_green_dark, null)
+                        ResourcesCompat.getDrawable(
+                            itemView.resources,
+                            R.color.cpb_green_dark,
+                            null
+                        )
                 }
                 14 //already aproved by staff and rejected by manager
                 -> {
@@ -349,7 +382,11 @@ class AdapterContract(
                         )
                     )
                     viewColor.background =
-                        ResourcesCompat.getDrawable(itemView.resources, R.color.material_grey_600, null)
+                        ResourcesCompat.getDrawable(
+                            itemView.resources,
+                            R.color.material_grey_600,
+                            null
+                        )
                 }
                 12 //reject by staff
                 -> {
@@ -371,7 +408,11 @@ class AdapterContract(
                         )
                     )
                     viewColor.background =
-                        ResourcesCompat.getDrawable(itemView.resources, R.color.cpb_green_dark, null)
+                        ResourcesCompat.getDrawable(
+                            itemView.resources,
+                            R.color.cpb_green_dark,
+                            null
+                        )
                 }
                 11 //pending in staff
                 -> {
@@ -393,7 +434,11 @@ class AdapterContract(
                         )
                     )
                     viewColor.background =
-                        ResourcesCompat.getDrawable(itemView.resources, R.color.cpb_green_dark, null)
+                        ResourcesCompat.getDrawable(
+                            itemView.resources,
+                            R.color.cpb_green_dark,
+                            null
+                        )
                 }
                 10 //already disposisi or reviewed by manager
                 -> {
@@ -415,66 +460,70 @@ class AdapterContract(
                         )
                     )
                     viewColor.background =
-                        ResourcesCompat.getDrawable(itemView.resources, R.color.cpb_green_dark, null)
-                }
-                7 //already disposisi or reviewed by manager
-                -> {
-                    tvStatus.setText(R.string.fa_share)
-                    tvStatus.setTextColor(
-                        ResourcesCompat.getColor(
-                            itemView.resources,
-                            R.color.cpb_blue_dark,
-                            null
-                        )
-                    )
-                    viewColor.background =
                         ResourcesCompat.getDrawable(
                             itemView.resources,
-                            R.color.cpb_blue_dark,
-                            null
-                        )
-                }
-                6 //already aprove by staff
-                -> {
-                    tvStatus.setText(R.string.fa_check)
-                    tvStatus.setTextColor(
-                        ResourcesCompat.getColor(
-                            itemView.resources,
                             R.color.cpb_green_dark,
                             null
                         )
-                    )
-                    viewColor.background = ResourcesCompat.getDrawable(
-                        itemView.resources,
-                        R.color.cpb_green_dark,
-                        null
-                    )
                 }
-                5 //already aproved by manager
-                -> {
-                    tvStatus2.setText(R.string.fa_check)
-                    tvStatus2.setTextColor(
-                        ResourcesCompat.getColor(
-                            itemView.resources,
-                            R.color.cpb_green_dark,
-                            null
-                        )
-                    )
-                    tvStatus2.visibility = View.VISIBLE
-                    tvStatus.setText(R.string.fa_check)
-                    tvStatus.setTextColor(
-                        ResourcesCompat.getColor(
-                            itemView.resources,
-                            R.color.cpb_green_dark,
-                            null
-                        )
-                    )
-                    viewColor.background = ResourcesCompat.getDrawable(
-                        itemView.resources,
-                        R.color.cpb_green_dark,
-                        null
-                    )
-                }
+//                7 //already disposisi or reviewed by manager
+//                -> {
+//                    tvStatus.setText(R.string.fa_share)
+//                    tvStatus.setTextColor(
+//                        ResourcesCompat.getColor(
+//                            itemView.resources,
+//                            R.color.cpb_blue_dark,
+//                            null
+//                        )
+//                    )
+//                    viewColor.background =
+//                        ResourcesCompat.getDrawable(
+//                            itemView.resources,
+//                            R.color.cpb_blue_dark,
+//                            null
+//                        )
+//                }
+//                6 //already aprove by staff
+//                -> {
+//                    tvStatus.setText(R.string.fa_check)
+//                    tvStatus.setTextColor(
+//                        ResourcesCompat.getColor(
+//                            itemView.resources,
+//                            R.color.cpb_green_dark,
+//                            null
+//                        )
+//                    )
+//                    viewColor.background = ResourcesCompat.getDrawable(
+//                        itemView.resources,
+//                        R.color.cpb_green_dark,
+//                        null
+//                    )
+//                }
+//                5 //already aproved by manager
+//                -> {
+//                    tvStatus2.setText(R.string.fa_check)
+//                    tvStatus2.setTextColor(
+//                        ResourcesCompat.getColor(
+//                            itemView.resources,
+//                            R.color.cpb_green_dark,
+//                            null
+//                        )
+//                    )
+//                    tvStatus2.visibility = View.VISIBLE
+//                    tvStatus.setText(R.string.fa_check)
+//                    tvStatus.setTextColor(
+//                        ResourcesCompat.getColor(
+//                            itemView.resources,
+//                            R.color.cpb_green_dark,
+//                            null
+//                        )
+//                    )
+//                    viewColor.background = ResourcesCompat.getDrawable(
+//                        itemView.resources,
+//                        R.color.cpb_green_dark,
+//                        null
+//                    )
+//                }
                 4 //reject by manager
                 -> {
                     tvStatus.setText(R.string.fa_unlike)

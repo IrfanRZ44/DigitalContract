@@ -198,7 +198,6 @@ class ActDocumentViewer : ActBase(),
             }
         }
 
-
         //Only main FAB is visible in the beginning
         closeSubMenusFab()
 
@@ -606,7 +605,6 @@ class ActDocumentViewer : ActBase(),
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 progressDialog.visibility = View.GONE
-                Log.e("Log", t.message.toString())
 //                textNone.text = t.message.toString()
                 textNone.visibility = View.VISIBLE
             }
@@ -1084,6 +1082,7 @@ class ActDocumentViewer : ActBase(),
         body["user_status"] = currentStatus.toString()
         body["note"] = note
 
+        Log.e("Change status", body.toString())
         disposable = service.setReadStatus(body)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
