@@ -3,7 +3,6 @@ package com.pertamina.digitalcontract.activity
 import android.Manifest
 import android.app.Dialog
 import android.app.KeyguardManager
-import android.app.ProgressDialog
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -16,7 +15,6 @@ import android.security.keystore.KeyPermanentlyInvalidatedException
 import android.security.keystore.KeyProperties
 import android.text.Editable
 import android.text.TextWatcher
-import android.transition.Visibility
 import android.util.Log
 import android.view.View
 import android.webkit.WebResourceError
@@ -35,7 +33,7 @@ import com.google.gson.GsonBuilder
 import com.pertamina.digitalcontract.*
 import com.pertamina.digitalcontract.rest.RetrofitApi
 import com.pertamina.digitalcontract.adapter.AdapterExtra
-import com.pertamina.digitalcontract.adapter.AdapterLogRejected
+import com.pertamina.digitalcontract.adapter.AdapterCatatan
 import com.pertamina.digitalcontract.adapter.AdapterReviewer
 import com.pertamina.digitalcontract.adapter.AdapterReviewer2
 import com.pertamina.digitalcontract.fingerprint.FingerprintAuthenticationDialogFragment
@@ -51,9 +49,6 @@ import kotlinx.android.synthetic.main.sub_fab.*
 import okhttp3.OkHttpClient
 import okhttp3.ResponseBody
 import okhttp3.logging.HttpLoggingInterceptor
-import org.jetbrains.anko.backgroundColor
-import org.jetbrains.anko.backgroundResource
-import org.jetbrains.anko.sdk27.coroutines.onClick
 import org.jetbrains.anko.textColor
 import org.json.JSONObject
 import retrofit2.Call
@@ -130,6 +125,10 @@ class ActDocumentViewer : ActBase(),
             }
         }
 
+        if (mUserRole == 5 || mUserRole == 6){
+            layoutFabNote.visibility = View.GONE
+        }
+
         title = mDocTitle
 
         dialog = Dialog(this, R.style.CustomDialogTheme)
@@ -192,7 +191,7 @@ class ActDocumentViewer : ActBase(),
             dialogExtra()
         }
 
-        if ((canApprove) or (mUserRole == 5) or (canChooseReviewer)) {
+        if ((canApprove) or (mUserRole == 5) or (mUserRole == 6) or (canChooseReviewer)) {
             if (mContractId != -1 && mContractStatus == 0) {
                 changeStatusContract(1, "", false)
             }
@@ -306,6 +305,8 @@ class ActDocumentViewer : ActBase(),
 
             updateDocumentView()
 
+            getNote()
+
             if (canPublish){
                 if (mContractStatus == 3){
                     fabApprove.isEnabled = false
@@ -338,10 +339,7 @@ class ActDocumentViewer : ActBase(),
                         if ((mUserRole == 39) or (mUserRole == 40) or (mUserRole == 33) or (mUserRole == 3) or ((mUserRole >= 22) and (mUserRole <= 32) or (mUserRole == 34) or (mUserRole == 35))){
                             fabReject.isEnabled = true
                             fabApprove.isEnabled = true
-                            fabSign.isEnabled = true
-                            tvSign.text = "Reason Rejected"
-                            fabSign.setImageResource(R.drawable.ic_memo_white)
-                            fabSign.setBackgroundTintList(getResources().getColorStateList(R.color.material_blue_grey_600));
+                            fabSign.isEnabled = false
 
                             InitApprover("Staff", "Request", 1)
                         }  else{
@@ -389,6 +387,50 @@ class ActDocumentViewer : ActBase(),
         }
     }
 
+    private fun getNote() {
+        fabNote.setOnClickListener {
+            mDialogL?.setContentView(R.layout.dialog_rejected_note)
+
+            val cancelBtn = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_cancel)
+            val textNone = mDialogL?.findViewById<TextView>(R.id.textNone)
+            val rcNote = mDialogL?.findViewById<RecyclerView>(R.id.rcNote)
+            val progressLog = mDialogL?.findViewById<ImageView>(R.id.progressLog)
+
+            progressLog?.visibility = View.VISIBLE
+            progressLog?.setBackgroundResource(R.drawable.animation_loading)
+            lateinit var animLog : AnimationDrawable
+            animLog = progressLog?.background as AnimationDrawable
+
+            animLog.start()
+
+            textNone?.text = "Belum ada catatan"
+
+            rcNote?.setHasFixedSize(true)
+            rcNote?.isNestedScrollingEnabled = false
+            rcNote?.layoutManager = LinearLayoutManager(this)
+            rcNote?.let { it1 -> textNone?.let { it2 -> progressLog?.let { it3 ->
+                if (mUserId != null){
+                    getNoteRejected(it1, it2,
+                        it3, mUserId!!
+                    )
+                }
+                else{
+                    textNone?.text = "Gagal mendapatkan Catatan"
+                    Toast.makeText(this, "Gagal mendapatkan Catatan", Toast.LENGTH_LONG)
+                }
+            } } }
+            cancelBtn?.setOnClickListener { mDialogL!!.dismiss() }
+
+            mDialogL?.show()
+
+            if (fabExpanded == true) {
+                closeSubMenusFab()
+            } else {
+                openSubMenusFab()
+            }
+        }
+    }
+
     private fun updateDocumentView() {
         var title = mDocPath
 
@@ -406,6 +448,7 @@ class ActDocumentViewer : ActBase(),
             layoutFabApprove.visibility = View.GONE
             layoutFabReject.visibility = View.VISIBLE
             tvReject.text = "Rejected"
+            fabReject.isEnabled = false
         } else {
             layoutFabApprove.visibility = View.VISIBLE
             layoutFabReject.visibility = View.VISIBLE
@@ -478,72 +521,15 @@ class ActDocumentViewer : ActBase(),
                 openSubMenusFab()
             }
         }
-
-        if (requestType == 1){
-            layoutFabSign.visibility = View.VISIBLE
-
-            fabSign.isEnabled = true
-            fabSign.setOnClickListener {
-                mDialogL?.setContentView(R.layout.dialog_rejected_note)
-
-                val cancelBtn = mDialogL?.findViewById<TextView>(R.id.dialog_universal_warning_cancel)
-                val textNone = mDialogL?.findViewById<TextView>(R.id.textNone)
-                val rcNote = mDialogL?.findViewById<RecyclerView>(R.id.rcNote)
-                val progressLog = mDialogL?.findViewById<ImageView>(R.id.progressLog)
-
-                progressLog?.visibility = View.VISIBLE
-                progressLog?.setBackgroundResource(R.drawable.animation_loading)
-                lateinit var animLog : AnimationDrawable
-                animLog = progressLog?.background as AnimationDrawable
-
-                animLog.start()
-
-                textNone?.text = "Gagal mendapatkan Alasan"
-
-                rcNote?.setHasFixedSize(true)
-                rcNote?.layoutManager = LinearLayoutManager(this)
-                rcNote?.let { it1 -> textNone?.let { it2 -> progressLog?.let { it3 ->
-                    getNoteRejected(it1, it2,
-                        it3
-                    )
-                } } }
-                cancelBtn?.setOnClickListener { mDialogL!!.dismiss() }
-
-                mDialogL?.show()
-
-                if (fabExpanded == true) {
-                    closeSubMenusFab()
-                } else {
-                    openSubMenusFab()
-                }
-            }
-        }
     }
 
-    private fun getNoteRejected(rcNote : RecyclerView, textNone: TextView, progressDialog : ImageView){
-        var jenisMgr = ""
-
-        //role user  37 = MGR Finance, 38 = MGR Legal, 19 = MGR HSSE
-        //role user  39 = Staff Finance, 40 = Staff Legal, 33 = Staff HSSE
-        if (mUserRole == 39) {
-            jenisMgr = "FINANCE_NOTE"
-        } else if (mUserRole == 40) {
-            jenisMgr = "LEGAL_NOTE"
-        } else if (mUserRole == 33) {
-            jenisMgr = "HSSE_NOTE"
-        } else if ((mUserRole >= 22) and (mUserRole <= 32) or (mUserRole == 34) or (mUserRole == 35)) {
-            if (mContractStatus == 4){
-                jenisMgr = "REVIEWER_NOTE"
-            } else{
-                jenisMgr = "REVIEWER_NOTE_2"
-            }
-        }
-
+    private fun getNoteRejected(rcNote : RecyclerView, textNone: TextView, progressDialog : ImageView, idUser: String){
         val body = HashMap<String, String>()
-        body["id_request"] = jenisMgr
+        body["id_user"] = idUser
+        body["user_role"] = mUserRole.toString()
         body["id_contract"] = mContractId.toString()
-
-        Log.e("Empty", body.toString())
+        textNone?.text = "Belum ada catatan"
+        Log.e("Log Note", body.toString())
 
         val gson = GsonBuilder().setLenient().create()
         val interceptor = HttpLoggingInterceptor()
@@ -571,7 +557,7 @@ class ActDocumentViewer : ActBase(),
         var listNote : ArrayList<ModelLogRejected>
         listNote = ArrayList()
 
-        val adapter = AdapterLogRejected(listNote, this)
+        val adapter = AdapterCatatan(listNote, this)
         rcNote?.adapter = adapter
 
         call.enqueue(object : Callback<ResponseBody> {
@@ -584,28 +570,34 @@ class ActDocumentViewer : ActBase(),
                     textNone.visibility = View.VISIBLE
                 } else {
                     textNone.visibility = View.GONE
-                    val data = message.split("\n")
 
-                    var a = 0
+                    if (message != "" || !message.isEmpty()){
+                        val data = message.split("\n")
 
-                    listNote.removeAll(listNote)
-                    while (a < data.size){
-                        if (data[a].contains("Manager")){
-                            val isi = data[a].split(" = ")
+                        var a = 0
 
-                            if(isi[2].length > 2){
-                                listNote.add(ModelLogRejected(isi[0], isi[1], isi[2]))
+                        listNote.removeAll(listNote)
+                        while (a < data.size){
+
+                            val isi = data[a].split(" | ")
+
+                            if(isi.size > 1){
+                                listNote.add(ModelLogRejected(isi[0], isi[1], isi[2], isi[3]))
                                 adapter.notifyDataSetChanged()
                             }
+
+                            a++
                         }
-                        a++
+
+                        if (listNote.size == 0){
+                            textNone.visibility = View.VISIBLE
+                        }
                     }
                 }
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 progressDialog.visibility = View.GONE
-//                textNone.text = t.message.toString()
                 textNone.visibility = View.VISIBLE
             }
         })
@@ -615,6 +607,7 @@ class ActDocumentViewer : ActBase(),
     private fun InitSigner() {
         layoutFabApprove.visibility = View.GONE
         layoutFabReject.visibility = View.GONE
+        layoutFabNote.visibility = View.GONE
         layoutFabSign.visibility = View.VISIBLE
 
         mPadSigned = false
@@ -633,6 +626,7 @@ class ActDocumentViewer : ActBase(),
                 setupKeyStoreAndKeyGenerator()
                 val (defaultCipher: javax.crypto.Cipher, cipherNotInvalidated: javax.crypto.Cipher) = setupCiphers()
                 setUpFingerPrint(cipherNotInvalidated, defaultCipher)
+
             } else {
                 sendSign()
             }
@@ -641,6 +635,7 @@ class ActDocumentViewer : ActBase(),
         cancelBtn?.setOnClickListener {
             mSignPad?.clear()
             mDialogL?.dismiss()
+            layoutFabMore.visibility = View.VISIBLE
         }
 
         fabSign.setOnClickListener {
@@ -1496,38 +1491,9 @@ class ActDocumentViewer : ActBase(),
     }
 
     private fun sendSign() {
+        layoutFabMore.visibility = View.GONE
         onLoading()
         postSignDoc()
-
-//        disposable = serviceBSRE.sendSign(body)
-//            .subscribeOn(Schedulers.io())
-//            .observeOn(AndroidSchedulers.mainThread())
-//            .doOnSubscribe {
-//                Log.e("body doing ", body.toString())
-//
-//            }
-//            .subscribe(
-//                { result ->
-//                    onComplete()
-//
-//                    val obj = JSONObject(result.string())
-//
-//                    try {
-//                        val response = obj.getInt("response")?:0
-//                        if(response==1)
-//                            dialogSuccess("Sign Success, the document has been success to signed",3)
-//                        else
-//                            dialogFailed(response.toString())
-//                    }
-//                    catch (e : Exception) {
-//                        val message = obj.getString("message")?:""
-//                        dialogFailed(message)
-//                    }
-//                },
-//                { error ->
-//                    dialogFailed(error.message.toString())
-//                }
-//            )
     }
 
     private fun postSignDoc() {
@@ -1535,8 +1501,6 @@ class ActDocumentViewer : ActBase(),
         body["id_user"] = mUserId.toString()
         body["id_contract"] = mContractId.toString()
         body["passphrase"] = passPhrase
-////        if (mUserRole == 5) body["penandatangan"] =  "112233455667788"
-////        else body["penandatangan"] =  "112234455667788"
         body["contract_title"] = mDocTitle
         body["contract_path"] = mDocPath
         Log.e("Body", body.toString());
@@ -1567,7 +1531,7 @@ class ActDocumentViewer : ActBase(),
         call.enqueue(object : Callback<ResponseBody> {
             override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 val result = response.body()?.string()
-
+                layoutFabMore.visibility = View.VISIBLE
                 if (result == null) {
                     dialogFailed("Error occured, the document has been failed to signed")
                 } else {
@@ -1591,6 +1555,7 @@ class ActDocumentViewer : ActBase(),
             }
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                layoutFabMore.visibility = View.VISIBLE
                 onComplete()
                 dialogFailed(t.message.toString())
             }

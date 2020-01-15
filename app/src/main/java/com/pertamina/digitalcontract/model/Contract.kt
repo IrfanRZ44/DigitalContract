@@ -27,6 +27,8 @@ open class Contract {
     open var VENDOR_SIGNATURE : String? = ""
     @field:SerializedName("VENDOR_CERTIFICATE")
     open var VENDOR_CERTIFICATE : String? = ""
+    @field:SerializedName("REVIEWER_VENDOR_CERTIFICATE")
+    open var REVIEWER_VENDOR_CERTIFICATE : String? = ""
     @field:SerializedName("OFFICER_SIGNATURE")
     open var OFFICER_SIGNATURE : String? = ""
     @field:SerializedName("OFFICER_CERTIFICATE")

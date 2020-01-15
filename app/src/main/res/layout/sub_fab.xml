@@ -243,6 +243,49 @@
                     />
 
         </LinearLayout>
+
+        <LinearLayout
+                android:id="@+id/layoutFabNote"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:layout_gravity="bottom|end"
+                android:orientation="horizontal"
+                >
+
+            <androidx.cardview.widget.CardView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="@color/cardview_light_background"
+                    app:cardCornerRadius="@dimen/_4dp"
+                    app:cardElevation="@dimen/_4dp"
+                    app:cardUseCompatPadding="true"
+                    android:layout_marginBottom="@dimen/_5dp"
+                    >
+                <TextView
+                        android:id="@+id/tvNote"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Note"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:textStyle="bold"
+                        android:paddingHorizontal="@dimen/_6dp"
+                        android:paddingVertical="@dimen/_2dp" />
+            </androidx.cardview.widget.CardView>
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fabNote"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:srcCompat="@drawable/ic_memo_white"
+                    app:backgroundTint="@color/material_blue_grey_600"
+                    android:layout_marginBottom="@dimen/_3dp"
+                    app:elevation="@dimen/_3dp"
+                    android:layout_marginRight="@dimen/_5dp"
+                    app:fabSize="mini"
+                    />
+
+        </LinearLayout>
     </LinearLayout>
 
     <LinearLayout

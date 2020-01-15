@@ -14,82 +14,86 @@
             app:cardBackgroundColor="@color/white"
             app:cardCornerRadius="@dimen/_10dp">
 
-        <LinearLayout
+        <androidx.core.widget.NestedScrollView
                 android:layout_width="@dimen/_220dp"
                 android:layout_height="wrap_content"
-                android:background="@android:color/white"
-                android:orientation="vertical">
+                android:background="@android:color/white">
 
             <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/_5dp"
-                    android:background="@drawable/grad_blue_red"
-                    android:gravity="center"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:orientation="vertical">
 
-                <TextView
-                        android:id="@+id/dialog_universal_warning_title"
-                        fontPath="fonts/Montserrat-SemiBold.ttf"
-                        android:layout_width="wrap_content"
+                <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Alasan Ditolak"
-                        android:textColor="@color/white"
-                        android:textSize="@dimen/_18sp" />
-            </LinearLayout>
-
-            <TextView
-                    android:id="@+id/textNone"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal"
-                    android:textAlignment="center"
-                    android:textColor="@color/cpb_red"
-                    android:textSize="@dimen/_14sp"
-                    android:visibility="gone"
-                    android:layout_marginLeft="@dimen/_10dp"
-                    android:layout_marginRight="@dimen/_10dp"
-                    />
-            <ImageView
-                    android:id="@+id/progressLog"
-                    android:visibility="gone"
-                    android:layout_width="@dimen/_80dp"
-                    android:layout_height="@dimen/_80dp"
-                    android:layout_gravity="center_horizontal"
-                    />
-
-            <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rcNote"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:scrollbars="vertical"
-                    android:layout_marginRight="@dimen/_10dp"
-                    android:layout_marginLeft="@dimen/_5dp"
-                    >
-
-            </androidx.recyclerview.widget.RecyclerView>
-
-            <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="right">
-
-                <TextView
-                        android:id="@+id/dialog_universal_warning_cancel"
-                        fontPath="fonts/Montserrat-SemiBold.ttf"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_margin="@dimen/_6dp"
-                        android:background="@drawable/selector_dialog_warning"
+                        android:layout_marginBottom="@dimen/_5dp"
+                        android:background="@drawable/grad_blue_red"
                         android:gravity="center"
-                        android:minWidth="64dp"
-                        android:padding="@dimen/_6dp"
-                        android:text="@string/dialog_cancel"
-                        android:textColor="@color/material_grey_600"
-                        android:textSize="@dimen/_11sp" />
+                        android:orientation="vertical"
+                        android:padding="16dp">
+
+                    <TextView
+                            android:id="@+id/dialog_universal_warning_title"
+                            fontPath="fonts/Montserrat-SemiBold.ttf"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Catatan"
+                            android:textColor="@color/white"
+                            android:textSize="@dimen/_18sp" />
+                </LinearLayout>
+
+                <TextView
+                        android:id="@+id/textNone"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_horizontal"
+                        android:layout_marginLeft="@dimen/_10dp"
+                        android:layout_marginRight="@dimen/_10dp"
+                        android:textAlignment="center"
+                        android:textColor="@color/cpb_red"
+                        android:textSize="@dimen/_14sp"
+                        android:visibility="gone" />
+
+                <ImageView
+                        android:id="@+id/progressLog"
+                        android:layout_width="@dimen/_80dp"
+                        android:layout_height="@dimen/_80dp"
+                        android:layout_gravity="center_horizontal"
+                        android:visibility="gone" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rcNote"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginLeft="@dimen/_5dp"
+                        android:layout_marginRight="@dimen/_10dp"
+                        android:scrollbars="vertical">
+
+                </androidx.recyclerview.widget.RecyclerView>
+
+                <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="right">
+
+                    <TextView
+                            android:id="@+id/dialog_universal_warning_cancel"
+                            fontPath="fonts/Montserrat-SemiBold.ttf"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_margin="@dimen/_6dp"
+                            android:background="@drawable/selector_dialog_warning"
+                            android:gravity="center"
+                            android:minWidth="64dp"
+                            android:padding="@dimen/_6dp"
+                            android:text="@string/dialog_cancel"
+                            android:textColor="@color/material_grey_600"
+                            android:textSize="@dimen/_11sp" />
+                </LinearLayout>
             </LinearLayout>
-        </LinearLayout>
+
+        </androidx.core.widget.NestedScrollView>
 
     </androidx.cardview.widget.CardView>
 
